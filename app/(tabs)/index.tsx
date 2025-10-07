@@ -1,7 +1,18 @@
-import React, { useState, useRef, useEffect } from "react";
-import { 
-  SafeAreaView, ScrollView, View, Text, StyleSheet, TextInput, 
-  Image, TouchableOpacity, StatusBar, Platform, FlatList, Modal, Animated
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  FlatList,
+  Image,
+  Modal,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -12,11 +23,17 @@ interface Product {
   valor: number | string;
   imagem?: string;
   categoria?: string;
+  em_promocao?: boolean;
+  isFavorite?: boolean;
 }
 
 interface Category {
   name: string;
-  img: any; // require(...) retorna any
+  img: any;
+}
+
+interface CategoryWithPromo extends Category {
+  isPromo?: boolean;
 }
 
 export default function HomeScreen() {
@@ -24,6 +41,7 @@ export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showPromo, setShowPromo] = useState<boolean>(false);
   const slideAnim = useRef(new Animated.Value(500)).current;
 
   // animação do carrinho
@@ -38,7 +56,9 @@ export default function HomeScreen() {
   // Buscar produtos da API
   async function fetchProducts(query: string = "") {
     try {
-      const response = await fetch(`https://qt8rqmzq-3000.brs.devtunnels.ms/api/produtos?search=${query}`);
+      const response = await fetch(
+        `https://qt8rqmzq-3000.brs.devtunnels.ms/api/produtos?search=${query}`
+      );
       if (!response.ok) throw new Error("Erro ao buscar produtos");
       const data: Product[] = await response.json();
       setProducts(data);
@@ -54,29 +74,54 @@ export default function HomeScreen() {
 
   // Categorias
   const categories: Category[] = [
-    { name: "Produtos", img: require("../../assets/images/todos.png")},
-    { name: "Promoções", img: require("../../assets/images/promo.png") },
+    { name: "Produtos", img: require("../../assets/images/todos.png") },
     { name: "Perfumaria", img: require("../../assets/images/perfumaria.png") },
     { name: "Piscina", img: require("../../assets/images/piscina.png") },
     { name: "Carros", img: require("../../assets/images/carros.png") },
     { name: "Casa", img: require("../../assets/images/image.png") },
   ];
 
-  // Produtos filtrados
-  const displayedProducts = selectedCategory && selectedCategory !== "Produtos"
-    ? products.filter(p => p.categoria === selectedCategory)
-    : products;
+  // Combinar categorias com promoções
+  const categoriesWithPromo: CategoryWithPromo[] = [
+    { name: "Promoções", img: require("../../assets/images/promo.png"), isPromo: true },
+    ...categories,
+  ];
 
-  const total = displayedProducts.reduce(
-    (sum, p) => sum + parseFloat((p.valor || 0).toString().replace(",", ".")),
-    0
-  ).toFixed(2);
+  // Filtro principal
+  const displayedProducts = products.filter((p) => {
+    const matchCategory =
+      !selectedCategory || selectedCategory === "Produtos"
+        ? true
+        : p.categoria === selectedCategory;
+    const matchPromo = showPromo ? p.em_promocao === true : true;
+    return matchCategory && matchPromo;
+  });
+
+  const toggleFavorite = (index: number) => {
+    const updated = [...displayedProducts];
+    updated[index].isFavorite = !updated[index].isFavorite;
+    const allProducts = products.map((p) =>
+      p.id === updated[index].id ? updated[index] : p
+    );
+    setProducts(allProducts);
+  };
+
+  const total = displayedProducts
+    .reduce(
+      (sum, p) =>
+        sum + parseFloat((p.valor || 0).toString().replace(",", ".")),
+      0
+    )
+    .toFixed(2);
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Logo */}
         <Image
           source={require("../../assets/images/logo.produtosd'paris(1)(1).png")}
@@ -93,65 +138,113 @@ export default function HomeScreen() {
               value={search}
               onChangeText={setSearch}
             />
-            <Ionicons name="search" size={22} color="#333" style={{ marginLeft: 8 }} />
+            <Ionicons
+              name="search"
+              size={22}
+              color="#333"
+              style={{ marginLeft: 8 }}
+            />
           </View>
 
-          <TouchableOpacity style={styles.cartButton} onPress={() => setCartVisible(true)}>
+          <TouchableOpacity
+            style={styles.cartButton}
+            onPress={() => setCartVisible(true)}
+          >
             <Ionicons name="cart" size={28} color="#333" />
           </TouchableOpacity>
         </View>
 
-        {/* Categorias */}
-        <View style={styles.categoryContainer}>
-          <FlatList
-            data={categories}
-            keyExtractor={(item, index) => index.toString()}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 10 }}
-            renderItem={({ item }) => (
-              <TouchableOpacity 
-                style={styles.categoryItem}
-                onPress={() => setSelectedCategory(item.name)}
-              >
-                <View style={styles.categoryCircle}>
-                  <Image source={item.img} style={styles.categoryImage} />
-                </View>
-                <Text style={styles.categoryText}>{item.name}</Text>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
+        {/* Linha de categorias + promoções */}
+        <FlatList
+          data={categoriesWithPromo}
+          keyExtractor={(item, index) => index.toString()}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 10 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.categoryItem}
+              onPress={() => {
+                if (item.isPromo) {
+                  setShowPromo(!showPromo);
+                  setSelectedCategory(null);
+                } else {
+                  setSelectedCategory(item.name);
+                  setShowPromo(false);
+                }
+              }}
+            >
+              <View style={styles.categoryCircle}>
+                <Image source={item.img} style={styles.categoryImage} />
+              </View>
+              <Text style={styles.categoryText}>{item.name}</Text>
+            </TouchableOpacity>
+          )}
+        />
 
         {/* Produtos */}
-        <Text style={styles.launchTitle}>Produtos</Text>
+        <Text style={styles.launchTitle}>
+          {showPromo ? "Promoções" : "Produtos"}
+        </Text>
         <View style={styles.productsContainer}>
           {displayedProducts.length > 0 ? (
             displayedProducts.map((produto, index) => (
               <View key={produto.id || index} style={styles.productCard}>
                 <Image
-                  source={{ uri: produto.imagem || "https://via.placeholder.com/80" }}
+                  source={{
+                    uri: produto.imagem || "https://via.placeholder.com/80",
+                  }}
                   style={styles.productImage}
                 />
                 <Text style={styles.productName}>{produto.nome}</Text>
                 <Text style={styles.productPrice}>
-                  R$ {parseFloat(produto.valor.toString()).toFixed(2).replace(".", ",")}
+                  R${" "}
+                  {parseFloat(produto.valor.toString())
+                    .toFixed(2)
+                    .replace(".", ",")}
                 </Text>
-                <TouchableOpacity style={styles.buyButton}>
-                  <Text style={styles.buyButtonText}>COMPRAR</Text>
-                </TouchableOpacity>
+
+                {/* Linha de botões */}
+                <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%", marginTop: 6 }}>
+                  {/* Favorito */}
+                  <TouchableOpacity onPress={() => toggleFavorite(index)} style={{ padding: 6 }}>
+                    <Ionicons
+                      name={produto.isFavorite ? "heart" : "heart-outline"}
+                      size={22}
+                      color={produto.isFavorite ? "red" : "#333"}
+                    />
+                  </TouchableOpacity>
+
+                  {/* Carrinho */}
+                  <TouchableOpacity onPress={() => setCartVisible(true)} style={{ padding: 6 }}>
+                    <Ionicons name="cart" size={22} color="#333" />
+                  </TouchableOpacity>
+
+                  {/* Comprar */}
+                  <TouchableOpacity style={styles.buyButton}>
+                    <Text style={styles.buyButtonText}>COMPRAR</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             ))
           ) : (
-            <Text style={{ textAlign: "center", marginTop: 20 }}>Nenhum produto encontrado.</Text>
+            <Text style={{ textAlign: "center", marginTop: 20 }}>
+              Nenhum produto encontrado.
+            </Text>
           )}
         </View>
       </ScrollView>
 
       {/* Modal do carrinho */}
-      <Modal visible={cartVisible} transparent onRequestClose={() => setCartVisible(false)}>
+      <Modal
+        visible={cartVisible}
+        transparent
+        onRequestClose={() => setCartVisible(false)}
+      >
         <View style={styles.modalOverlay}>
-          <Animated.View style={[styles.modalContent, { transform: [{ translateX: slideAnim }] }]}>
+          <Animated.View
+            style={[styles.modalContent, { transform: [{ translateX: slideAnim }] }]}
+          >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Meu carrinho</Text>
               <TouchableOpacity onPress={() => setCartVisible(false)}>
@@ -162,17 +255,29 @@ export default function HomeScreen() {
             <ScrollView style={{ marginVertical: 10 }}>
               {displayedProducts.map((item, index) => (
                 <View key={item.id || index} style={styles.cartItem}>
-                  <Image source={{ uri: item.imagem || "https://via.placeholder.com/60" }} style={styles.cartImage} />
+                  <Image
+                    source={{
+                      uri: item.imagem || "https://via.placeholder.com/60",
+                    }}
+                    style={styles.cartImage}
+                  />
                   <View style={{ flex: 1, marginLeft: 10 }}>
                     <Text numberOfLines={1}>{item.nome}</Text>
                     <Text>
-                      R$ {parseFloat((item.valor || 0).toString()).toFixed(2).replace(".", ",")}
+                      R${" "}
+                      {parseFloat((item.valor || 0).toString())
+                        .toFixed(2)
+                        .replace(".", ",")}
                     </Text>
                   </View>
                   <View style={styles.quantityControl}>
-                    <TouchableOpacity style={styles.qtyButton}><Text>-</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.qtyButton}>
+                      <Text>-</Text>
+                    </TouchableOpacity>
                     <Text>1</Text>
-                    <TouchableOpacity style={styles.qtyButton}><Text>+</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.qtyButton}>
+                      <Text>+</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               ))}
@@ -193,20 +298,63 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-  scrollContent: { paddingBottom: 20, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 },
+  scrollContent: {
+    paddingBottom: 20,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
   logo: { width: 500, height: 90, alignSelf: "center", marginTop: 10 },
-  searchRow: { flexDirection: "row", alignItems: "center", marginHorizontal: 10, marginVertical: 10 },
-  searchWrapper: { flex: 1, flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, backgroundColor: "#f5f5f5", paddingVertical: 4 },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 10,
+    marginVertical: 10,
+  },
+  searchWrapper: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    backgroundColor: "#f5f5f5",
+    paddingVertical: 4,
+  },
   searchInput: { flex: 1, padding: 8 },
-  cartButton: { marginLeft: 10, padding: 8, backgroundColor: "#e0e0e0", borderRadius: 20 },
-  categoryContainer: { marginVertical: 12 },
+  cartButton: {
+    marginLeft: 10,
+    padding: 8,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 20,
+  },
   categoryItem: { alignItems: "center", marginRight: 15 },
-  categoryCircle: { width: 90, height: 90, borderRadius: 40, backgroundColor: "#fff", justifyContent: "center", alignItems: "center", elevation: 2, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 4 },
+  categoryCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
   categoryImage: { width: 60, height: 60, resizeMode: "contain" },
   categoryText: { marginTop: 6, fontSize: 12, color: "#333", textAlign: "center" },
   launchTitle: { fontSize: 18, fontWeight: "bold", marginHorizontal: 15, marginBottom: 10, marginTop: 5, color: "#333" },
   productsContainer: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-around" },
-  productCard: { width: "45%", backgroundColor: "#fff", borderRadius: 10, padding: 10, marginBottom: 15, alignItems: "center", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 6, elevation: 3 },
+  productCard: {
+    width: "45%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 15,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
   productImage: { width: 80, height: 80, marginBottom: 8 },
   productName: { fontSize: 14, fontWeight: "bold", textAlign: "center" },
   productPrice: { fontSize: 14, color: "green", marginVertical: 4 },
@@ -221,5 +369,5 @@ const styles = StyleSheet.create({
   quantityControl: { flexDirection: "row", alignItems: "center" },
   qtyButton: { paddingHorizontal: 6, paddingVertical: 2, backgroundColor: "#ccc", borderRadius: 4, marginHorizontal: 4 },
   cartFooter: { marginTop: 10, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  finalizeButton: { backgroundColor: "#05182bff", paddingVertical: 8, paddingHorizontal: 10, borderRadius: 10 }
+  finalizeButton: { backgroundColor: "#05182bff", paddingVertical: 8, paddingHorizontal: 10, borderRadius: 10 },
 });
