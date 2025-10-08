@@ -1,6 +1,12 @@
 import React, { useState } from "react";
-import { 
-  View, Text, TextInput, Image, TouchableOpacity, StyleSheet, ScrollView 
+import {
+  View,
+  Text,
+  TextInput,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -16,7 +22,7 @@ export default function Perfil() {
       <View style={styles.header}>
         <View style={styles.profileContainer}>
           <Ionicons name="person-circle-outline" size={90} color="#000" />
-          <Text style={styles.profileName}>Maria da Silva</Text>
+          <Text style={styles.profileName}>{nome}</Text>
           <TouchableOpacity style={styles.logoutButton}>
             <Ionicons name="log-out-outline" size={18} color="#000" />
           </TouchableOpacity>
@@ -27,34 +33,59 @@ export default function Perfil() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Configurações</Text>
 
+        {/* Nome */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Nome</Text>
           <View style={styles.inputRow}>
-            <TextInput style={styles.input} value={nome} editable />
+            <TextInput
+              style={styles.input}
+              value={nome}
+              onChangeText={setNome}
+              editable={true} // Agora sempre editável
+            />
             <Ionicons name="create-outline" size={18} color="#888" />
           </View>
         </View>
 
+        {/* Email */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Email</Text>
           <View style={styles.inputRow}>
-            <TextInput style={styles.input} value={email} editable />
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              editable={true}
+            />
             <Ionicons name="create-outline" size={18} color="#888" />
           </View>
         </View>
 
+        {/* Senha */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Senha</Text>
           <View style={styles.inputRow}>
-            <TextInput style={styles.input} value={senha} secureTextEntry />
+            <TextInput
+              style={styles.input}
+              value={senha}
+              secureTextEntry
+              onChangeText={setSenha}
+              editable={true}
+            />
             <Ionicons name="create-outline" size={18} color="#888" />
           </View>
         </View>
 
+        {/* Telefone */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Telefone</Text>
           <View style={styles.inputRow}>
-            <TextInput style={styles.input} value={telefone} editable />
+            <TextInput
+              style={styles.input}
+              value={telefone}
+              onChangeText={setTelefone}
+              editable={true}
+            />
             <Ionicons name="create-outline" size={18} color="#888" />
           </View>
         </View>
@@ -69,7 +100,8 @@ export default function Perfil() {
         />
         <View style={{ marginTop: 10 }}>
           <Text style={styles.infoText}>
-            <Ionicons name="location-outline" size={14} /> Rua Silvino Olavo, Nº 71 - Centro
+            <Ionicons name="location-outline" size={14} /> Rua Silvino Olavo, Nº
+            71 - Centro
           </Text>
           <Text style={styles.infoText}>Esperança, Paraíba</Text>
           <Text style={styles.infoText}>CEP 58135-000</Text>
@@ -81,7 +113,8 @@ export default function Perfil() {
             <Ionicons name="call-outline" size={14} /> (83) 98873-5262
           </Text>
           <Text style={styles.infoText}>
-            <Ionicons name="mail-outline" size={14} /> produtosdeparis1981@gmail.com
+            <Ionicons name="mail-outline" size={14} />{" "}
+            produtosdeparis1981@gmail.com
           </Text>
         </View>
       </View>

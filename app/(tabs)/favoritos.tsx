@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 export default function Favoritos() {
   const favoritos = [
-    { id: "1", nome: "Água Sanitária 2L Ypê", preco: "1x de R$ 6,67 sem juros", img: "https://www.brilhante.com.br/images/h0nadbhvm6m4/2yC8ICjyX4SFPv4VP3mSZ/295b0bd6638e4b99718f5bdb0c31ec3a/QV9ndWFfU2FuaXRhX3JpYV9CcmlsaGFudGVfQ2xvcm9fQXRpdm9fLnBuZw/1080w-1080h/%C3%A1gua-sanit%C3%A1ria-brilhante-packshot.jpg" },
+    { },
   ];
 
   return (
@@ -38,27 +38,7 @@ export default function Favoritos() {
         </TouchableOpacity>
       </View>
 
-      {/* Lista de Favoritos */}
-      <FlatList
-        data={favoritos}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 20 }}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            {/* Imagem à esquerda */}
-            <Image source={{ uri: item.img }} style={styles.image} />
 
-            {/* Info à direita */}
-            <View style={styles.info}>
-              <TouchableOpacity style={styles.favoriteIcon}>
-                <Ionicons name="heart-outline" size={22} color="#333" />
-              </TouchableOpacity>
-              <Text style={styles.nome}>{item.nome}</Text>
-              <Text style={styles.preco}>{item.preco}</Text>
-            </View>
-          </View>
-        )}
-      />
     </SafeAreaView>
   );
 }
