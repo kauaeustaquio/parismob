@@ -7,24 +7,57 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function Perfil() {
-  const [nome, setNome] = useState("Maria da Silva Pereira");
-  const [email, setEmail] = useState("maria.dasilva@gmail.com");
-  const [senha, setSenha] = useState("********");
-  const [telefone, setTelefone] = useState("(83) 99654-6757");
+  // Valores de exemplo
+  const exampleNome = "Maria da Silva Pereira";
+  const exampleEmail = "maria.dasilva@gmail.com";
+  const exampleSenha = "********";
+  const exampleTelefone = "(83) 99654-6757";
+
+  // Estados reais do usuário
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [telefone, setTelefone] = useState("");
+
+  // Estados de foco
+  const [focusedNome, setFocusedNome] = useState(false);
+  const [focusedEmail, setFocusedEmail] = useState(false);
+  const [focusedSenha, setFocusedSenha] = useState(false);
+  const [focusedTelefone, setFocusedTelefone] = useState(false);
+
+  // Função para confirmar logout
+  const handleLogout = () => {
+    Alert.alert(
+      "Confirmação",
+      "Tem certeza que deseja sair da conta?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Sair", style: "destructive", onPress: () => console.log("Usuário deslogado") },
+      ],
+      { cancelable: true }
+    );
+  };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Cabeçalho */}
       <View style={styles.header}>
         <View style={styles.profileContainer}>
-          <Ionicons name="person-circle-outline" size={90} color="#000" />
-          <Text style={styles.profileName}>{nome}</Text>
-          <TouchableOpacity style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={18} color="#000" />
+          {/* Ícone de foto com borda */}
+          <View style={styles.photoContainer}>
+            <Ionicons name="person-circle-outline" size={90} color="#000" />
+          </View>
+          <Text style={styles.profileName}>{nome || exampleNome}</Text>
+
+          {/* Botão de logout abaixo do nome */}
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Ionicons name="log-out-outline" size={18} color="#fff" />
+            <Text style={styles.logoutText}>Sair</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -41,9 +74,13 @@ export default function Perfil() {
               style={styles.input}
               value={nome}
               onChangeText={setNome}
-              editable={true} // Agora sempre editável
+              onFocus={() => setFocusedNome(true)}
+              onBlur={() => setFocusedNome(false)}
+              placeholder={focusedNome ? "" : exampleNome}
             />
-            <Ionicons name="create-outline" size={18} color="#888" />
+            <TouchableOpacity onPress={() => setFocusedNome(true)}>
+              <Ionicons name="create-outline" size={18} color="#888" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -55,9 +92,13 @@ export default function Perfil() {
               style={styles.input}
               value={email}
               onChangeText={setEmail}
-              editable={true}
+              onFocus={() => setFocusedEmail(true)}
+              onBlur={() => setFocusedEmail(false)}
+              placeholder={focusedEmail ? "" : exampleEmail}
             />
-            <Ionicons name="create-outline" size={18} color="#888" />
+            <TouchableOpacity onPress={() => setFocusedEmail(true)}>
+              <Ionicons name="create-outline" size={18} color="#888" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -70,9 +111,13 @@ export default function Perfil() {
               value={senha}
               secureTextEntry
               onChangeText={setSenha}
-              editable={true}
+              onFocus={() => setFocusedSenha(true)}
+              onBlur={() => setFocusedSenha(false)}
+              placeholder={focusedSenha ? "" : exampleSenha}
             />
-            <Ionicons name="create-outline" size={18} color="#888" />
+            <TouchableOpacity onPress={() => setFocusedSenha(true)}>
+              <Ionicons name="create-outline" size={18} color="#888" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -84,9 +129,13 @@ export default function Perfil() {
               style={styles.input}
               value={telefone}
               onChangeText={setTelefone}
-              editable={true}
+              onFocus={() => setFocusedTelefone(true)}
+              onBlur={() => setFocusedTelefone(false)}
+              placeholder={focusedTelefone ? "" : exampleTelefone}
             />
-            <Ionicons name="create-outline" size={18} color="#888" />
+            <TouchableOpacity onPress={() => setFocusedTelefone(true)}>
+              <Ionicons name="create-outline" size={18} color="#888" />
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -118,27 +167,6 @@ export default function Perfil() {
           </Text>
         </View>
       </View>
-
-      {/* Pedidos */}
-      <View style={[styles.section, { marginBottom: 30 }]}>
-        <Text style={styles.sectionTitle}>Pedidos</Text>
-        <View style={styles.orderCard}>
-          <View style={styles.orderLeft}>
-            <Image
-              source={{ uri: "https://via.placeholder.com/60" }}
-              style={styles.orderImage}
-            />
-            <View>
-              <Text style={styles.orderTitle}>Cloro para piscina</Text>
-              <Text style={styles.orderLabel}>Limpeza de piscina</Text>
-            </View>
-          </View>
-          <View style={styles.orderRight}>
-            <Text style={styles.orderPrice}>R$ 48,59</Text>
-            <Text style={styles.orderStatus}>Entregue</Text>
-          </View>
-        </View>
-      </View>
     </ScrollView>
   );
 }
@@ -147,8 +175,27 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 15 },
   header: { alignItems: "center", marginTop: 20 },
   profileContainer: { alignItems: "center", position: "relative" },
+  photoContainer: {
+    borderWidth: 2,
+    borderColor: "#05182bff",
+    borderRadius: 50,
+    padding: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   profileName: { fontSize: 18, fontWeight: "bold", marginTop: 8 },
-  logoutButton: { position: "absolute", right: -10, top: 10 },
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#05182bff",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginTop: 8,
+  },
+  logoutText: { color: "#fff", marginLeft: 5, fontWeight: "bold" },
 
   section: { marginTop: 25 },
   sectionTitle: { fontWeight: "bold", fontSize: 16, marginBottom: 10 },
@@ -172,20 +219,4 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   infoText: { fontSize: 13, color: "#444", marginVertical: 2 },
-
-  orderCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f8f8f8",
-    borderRadius: 10,
-    padding: 10,
-    justifyContent: "space-between",
-  },
-  orderLeft: { flexDirection: "row", alignItems: "center" },
-  orderImage: { width: 50, height: 50, borderRadius: 8, marginRight: 10 },
-  orderTitle: { fontSize: 14, fontWeight: "bold" },
-  orderLabel: { fontSize: 12, color: "#777" },
-  orderRight: { alignItems: "flex-end" },
-  orderPrice: { fontSize: 14, fontWeight: "bold" },
-  orderStatus: { fontSize: 12, color: "orange" },
 });

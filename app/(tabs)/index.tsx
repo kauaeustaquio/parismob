@@ -13,10 +13,10 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-// Tipos
 interface Product {
   id?: number;
   nome: string;
@@ -42,18 +42,26 @@ export default function HomeScreen() {
   const [search, setSearch] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showPromo, setShowPromo] = useState<boolean>(false);
-  const slideAnim = useRef(new Animated.Value(500)).current;
 
-  // animação do carrinho
+  const screenWidth = Dimensions.get("window").width;
+
+  // animação do carrinho vindo da direita
+  const slideAnim = useRef(new Animated.Value(screenWidth)).current;
+
   useEffect(() => {
-    Animated.timing(slideAnim, {
-      toValue: cartVisible ? 0 : 500,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
+    if (cartVisible) {
+      // abrir: anima de fora para dentro
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 350,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      // fechar: resetar valor para fora da tela
+      slideAnim.setValue(screenWidth);
+    }
   }, [cartVisible]);
 
-  // Buscar produtos da API
   async function fetchProducts(query: string = "") {
     try {
       const response = await fetch(
@@ -67,12 +75,10 @@ export default function HomeScreen() {
     }
   }
 
-  // Buscar produtos quando a tela carregar ou search mudar
   useEffect(() => {
     fetchProducts(search);
   }, [search]);
 
-  // Categorias
   const categories: Category[] = [
     { name: "Produtos", img: require("../../assets/images/todos.png") },
     { name: "Perfumaria", img: require("../../assets/images/perfumaria.png") },
@@ -81,13 +87,11 @@ export default function HomeScreen() {
     { name: "Casa", img: require("../../assets/images/image.png") },
   ];
 
-  // Combinar categorias com promoções
   const categoriesWithPromo: CategoryWithPromo[] = [
     { name: "Promoções", img: require("../../assets/images/promo.png"), isPromo: true },
     ...categories,
   ];
 
-  // Filtro principal
   const displayedProducts = products.filter((p) => {
     const matchCategory =
       !selectedCategory || selectedCategory === "Produtos"
@@ -122,14 +126,12 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Logo */}
         <Image
           source={require("../../assets/images/logo.produtosd'paris(1)(1).png")}
           style={styles.logo}
           resizeMode="contain"
         />
 
-        {/* Linha de pesquisa + carrinho */}
         <View style={styles.searchRow}>
           <View style={styles.searchWrapper}>
             <TextInput
@@ -154,7 +156,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Linha de categorias + promoções */}
         <FlatList
           data={categoriesWithPromo}
           keyExtractor={(item, index) => index.toString()}
@@ -182,10 +183,10 @@ export default function HomeScreen() {
           )}
         />
 
-        {/* Produtos */}
         <Text style={styles.launchTitle}>
           {showPromo ? "Promoções" : "Produtos"}
         </Text>
+
         <View style={styles.productsContainer}>
           {displayedProducts.length > 0 ? (
             displayedProducts.map((produto, index) => (
@@ -204,9 +205,7 @@ export default function HomeScreen() {
                     .replace(".", ",")}
                 </Text>
 
-                {/* Linha de botões */}
                 <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%", marginTop: 6 }}>
-                  {/* Favorito */}
                   <TouchableOpacity onPress={() => toggleFavorite(index)} style={{ padding: 6 }}>
                     <Ionicons
                       name={produto.isFavorite ? "heart" : "heart-outline"}
@@ -215,12 +214,10 @@ export default function HomeScreen() {
                     />
                   </TouchableOpacity>
 
-                  {/* Carrinho */}
                   <TouchableOpacity onPress={() => setCartVisible(true)} style={{ padding: 6 }}>
                     <Ionicons name="cart" size={22} color="#333" />
                   </TouchableOpacity>
 
-                  {/* Comprar */}
                   <TouchableOpacity style={styles.buyButton}>
                     <Text style={styles.buyButtonText}>COMPRAR</Text>
                   </TouchableOpacity>
@@ -235,15 +232,13 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
-      {/* Modal do carrinho */}
-      <Modal
-        visible={cartVisible}
-        transparent
-        onRequestClose={() => setCartVisible(false)}
-      >
+      <Modal visible={cartVisible} transparent onRequestClose={() => setCartVisible(false)}>
         <View style={styles.modalOverlay}>
           <Animated.View
-            style={[styles.modalContent, { transform: [{ translateX: slideAnim }] }]}
+            style={[
+              styles.modalContent,
+              { transform: [{ translateX: slideAnim }] },
+            ]}
           >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Meu carrinho</Text>
@@ -284,9 +279,13 @@ export default function HomeScreen() {
             </ScrollView>
 
             <View style={styles.cartFooter}>
-              <Text style={{ fontWeight: "bold" }}>Total estimado: R$ {total}</Text>
+              <Text style={{ fontWeight: "bold" }}>
+                Total estimado: R$ {total}
+              </Text>
               <TouchableOpacity style={styles.finalizeButton}>
-                <Text style={{ color: "#fff", fontWeight: "bold" }}>Finalizar Compra</Text>
+                <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                  Finalizar Compra
+                </Text>
               </TouchableOpacity>
             </View>
           </Animated.View>
@@ -361,7 +360,14 @@ const styles = StyleSheet.create({
   buyButton: { backgroundColor: "#05182bff", paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8 },
   buyButtonText: { color: "#fff", fontWeight: "bold" },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-start", alignItems: "flex-end" },
-  modalContent: { backgroundColor: "#fff", width: "70%", height: "100%", padding: 15, borderTopLeftRadius: 15, borderBottomLeftRadius: 15 },
+  modalContent: {
+    backgroundColor: "#fff",
+    width: "70%",
+    height: "100%",
+    padding: 15,
+    borderTopLeftRadius: 15,
+    borderBottomLeftRadius: 15,
+  },
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   modalTitle: { fontSize: 18, fontWeight: "bold" },
   cartItem: { flexDirection: "row", alignItems: "center", marginBottom: 10, backgroundColor: "#f5f5f5", padding: 10, borderRadius: 8 },
