@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
   Dimensions,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -25,6 +26,7 @@ interface Product {
   categoria?: string;
   em_promocao?: boolean;
   isFavorite?: boolean;
+  inCart?: boolean;
 }
 
 interface Category {
@@ -69,7 +71,12 @@ export default function HomeScreen() {
       );
       if (!response.ok) throw new Error("Erro ao buscar produtos");
       const data: Product[] = await response.json();
-      setProducts(data);
+      const initialized = data.map((p) => ({
+        ...p,
+        isFavorite: false,
+        inCart: false,
+      }));
+      setProducts(initialized);
     } catch (error) {
       console.error(error);
     }
@@ -110,7 +117,36 @@ export default function HomeScreen() {
     setProducts(allProducts);
   };
 
-  const total = displayedProducts
+  const toggleCartItem = (index: number) => {
+    const updated = [...displayedProducts];
+    updated[index].inCart = !updated[index].inCart;
+    const allProducts = products.map((p) =>
+      p.id === updated[index].id ? updated[index] : p
+    );
+    setProducts(allProducts);
+  };
+
+  const removeFromCart = (product: Product) => {
+    const updated = products.map((p) =>
+      p.id === product.id ? { ...p, inCart: false } : p
+    );
+    setProducts(updated);
+  };
+
+  const confirmRemove = (product: Product) => {
+    Alert.alert(
+      "Remover produto",
+      "Deseja mesmo excluir este produto do carrinho de compras?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Remover", style: "destructive", onPress: () => removeFromCart(product) },
+      ]
+    );
+  };
+
+  const cartItems = products.filter((p) => p.inCart);
+
+  const total = cartItems
     .reduce(
       (sum, p) =>
         sum + parseFloat((p.valor || 0).toString().replace(",", ".")),
@@ -140,12 +176,7 @@ export default function HomeScreen() {
               value={search}
               onChangeText={setSearch}
             />
-            <Ionicons
-              name="search"
-              size={22}
-              color="#333"
-              style={{ marginLeft: 8 }}
-            />
+            <Ionicons name="search" size={22} color="#333" style={{ marginLeft: 8 }} />
           </View>
 
           <TouchableOpacity
@@ -205,8 +236,18 @@ export default function HomeScreen() {
                     .replace(".", ",")}
                 </Text>
 
-                <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%", marginTop: 6 }}>
-                  <TouchableOpacity onPress={() => toggleFavorite(index)} style={{ padding: 6 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    width: "100%",
+                    marginTop: 6,
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={() => toggleFavorite(index)}
+                    style={{ padding: 6 }}
+                  >
                     <Ionicons
                       name={produto.isFavorite ? "heart" : "heart-outline"}
                       size={22}
@@ -214,8 +255,15 @@ export default function HomeScreen() {
                     />
                   </TouchableOpacity>
 
-                  <TouchableOpacity onPress={() => setCartVisible(true)} style={{ padding: 6 }}>
-                    <Ionicons name="cart" size={22} color="#333" />
+                  <TouchableOpacity
+                    onPress={() => toggleCartItem(index)}
+                    style={{ padding: 6 }}
+                  >
+                    <Ionicons
+                      name={produto.inCart ? "cart" : "cart-outline"}
+                      size={22}
+                      color={produto.inCart ? "#05182bff" : "#333"}
+                    />
                   </TouchableOpacity>
 
                   <TouchableOpacity style={styles.buyButton}>
@@ -232,13 +280,11 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
+      {/* MODAL DO CARRINHO */}
       <Modal visible={cartVisible} transparent onRequestClose={() => setCartVisible(false)}>
         <View style={styles.modalOverlay}>
           <Animated.View
-            style={[
-              styles.modalContent,
-              { transform: [{ translateX: slideAnim }] },
-            ]}
+            style={[styles.modalContent, { transform: [{ translateX: slideAnim }] }]}
           >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Meu carrinho</Text>
@@ -248,34 +294,36 @@ export default function HomeScreen() {
             </View>
 
             <ScrollView style={{ marginVertical: 10 }}>
-              {displayedProducts.map((item, index) => (
-                <View key={item.id || index} style={styles.cartItem}>
-                  <Image
-                    source={{
-                      uri: item.imagem || "https://via.placeholder.com/60",
-                    }}
-                    style={styles.cartImage}
-                  />
-                  <View style={{ flex: 1, marginLeft: 10 }}>
-                    <Text numberOfLines={1}>{item.nome}</Text>
-                    <Text>
-                      R${" "}
-                      {parseFloat((item.valor || 0).toString())
-                        .toFixed(2)
-                        .replace(".", ",")}
-                    </Text>
-                  </View>
-                  <View style={styles.quantityControl}>
-                    <TouchableOpacity style={styles.qtyButton}>
-                      <Text>-</Text>
-                    </TouchableOpacity>
-                    <Text>1</Text>
-                    <TouchableOpacity style={styles.qtyButton}>
-                      <Text>+</Text>
+              {cartItems.length > 0 ? (
+                cartItems.map((item, index) => (
+                  <View key={item.id || index} style={styles.cartItem}>
+                    <Image
+                      source={{
+                        uri: item.imagem || "https://via.placeholder.com/60",
+                      }}
+                      style={styles.cartImage}
+                    />
+                    <View style={{ flex: 1, marginLeft: 10 }}>
+                      <Text numberOfLines={1}>{item.nome}</Text>
+                      <Text>
+                        R${" "}
+                        {parseFloat((item.valor || 0).toString())
+                          .toFixed(2)
+                          .replace(".", ",")}
+                      </Text>
+                    </View>
+
+                    {/* Botão X de excluir */}
+                    <TouchableOpacity onPress={() => confirmRemove(item)}>
+                      <Ionicons name="close" size={22} color="#ff4d4d" />
                     </TouchableOpacity>
                   </View>
-                </View>
-              ))}
+                ))
+              ) : (
+                <Text style={{ textAlign: "center", marginTop: 20 }}>
+                  Carrinho vazio.
+                </Text>
+              )}
             </ScrollView>
 
             <View style={styles.cartFooter}>
@@ -340,8 +388,19 @@ const styles = StyleSheet.create({
   },
   categoryImage: { width: 60, height: 60, resizeMode: "contain" },
   categoryText: { marginTop: 6, fontSize: 12, color: "#333", textAlign: "center" },
-  launchTitle: { fontSize: 18, fontWeight: "bold", marginHorizontal: 15, marginBottom: 10, marginTop: 5, color: "#333" },
-  productsContainer: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-around" },
+  launchTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginHorizontal: 15,
+    marginBottom: 10,
+    marginTop: 5,
+    color: "#333",
+  },
+  productsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-around",
+  },
   productCard: {
     width: "45%",
     backgroundColor: "#fff",
@@ -357,9 +416,19 @@ const styles = StyleSheet.create({
   productImage: { width: 80, height: 80, marginBottom: 8 },
   productName: { fontSize: 14, fontWeight: "bold", textAlign: "center" },
   productPrice: { fontSize: 14, color: "green", marginVertical: 4 },
-  buyButton: { backgroundColor: "#05182bff", paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8 },
+  buyButton: {
+    backgroundColor: "#05182bff",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
   buyButtonText: { color: "#fff", fontWeight: "bold" },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-start", alignItems: "flex-end" },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-start",
+    alignItems: "flex-end",
+  },
   modalContent: {
     backgroundColor: "#fff",
     width: "70%",
@@ -368,12 +437,32 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 15,
     borderBottomLeftRadius: 15,
   },
-  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   modalTitle: { fontSize: 18, fontWeight: "bold" },
-  cartItem: { flexDirection: "row", alignItems: "center", marginBottom: 10, backgroundColor: "#f5f5f5", padding: 10, borderRadius: 8 },
+  cartItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+    backgroundColor: "#f5f5f5",
+    padding: 10,
+    borderRadius: 8,
+  },
   cartImage: { width: 60, height: 60 },
-  quantityControl: { flexDirection: "row", alignItems: "center" },
-  qtyButton: { paddingHorizontal: 6, paddingVertical: 2, backgroundColor: "#ccc", borderRadius: 4, marginHorizontal: 4 },
-  cartFooter: { marginTop: 10, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  finalizeButton: { backgroundColor: "#05182bff", paddingVertical: 8, paddingHorizontal: 10, borderRadius: 10 },
+  cartFooter: {
+    marginTop: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  finalizeButton: {
+    backgroundColor: "#05182bff",
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+  },
 });
