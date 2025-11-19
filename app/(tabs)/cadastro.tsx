@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     logo: { width: 240, height: 200 },
-    title: { fontSize: 30, fontWeight: "300", marginBottom: 10 },
+    title: { fontSize: 30, fontWeight: "500", marginBottom: 10 },
     card: {
         width: "100%",
         backgroundColor: "#fff",
