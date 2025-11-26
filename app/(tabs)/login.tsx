@@ -9,67 +9,55 @@ import {
   Image,
   StatusBar,
   Platform,
+  Alert,
+  
 } from "react-native";
 
-export default function LoginScreen() {
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+export default function Login({ }) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+  async function loginGoogle() {
+    
+  }
 
-      {/* Logo */}
-      <Image
-        source={require("../../assets/images/icon-cadastro.png")}
-        style={styles.logo}
-        resizeMode="contain"
-      />
+  async function loginEmailSenha() {
+    if (!email || !senha) {
+      return Alert.alert("Erro", "Preencha email e senha.");
+    }
 
-      {/* Título */}
-      <Text style={styles.title}>Login</Text>
+    console.log("Acabei de fazer login com o email e senha!")
+    setLoading(true);
 
-      {/* Campo Email */}
-      <View style={styles.inputWrapper}>
-        <TextInput
-          placeholder="Email"
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-        />
-      </View>
+    try {
+      //fazer chamada da api aqui para fazer login
+      const resp = await fetch("https://localhost:3000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, senha })
+      });
 
-      {/* Campo Senha */}
-      <View style={styles.inputWrapper}>
-        <TextInput
-          placeholder="Senha"
-          style={styles.input}
-          value={senha}
-          onChangeText={setSenha}
-          secureTextEntry
-        />
-      </View>
+      const dados = await resp.json();
 
-      {/* Botão Entrar */}
-      <TouchableOpacity style={styles.loginButton}>
-        <Text style={styles.loginButtonText}>Entrar</Text>
-      </TouchableOpacity>
+      if (!resp.ok) {
+        setLoading(false);
+        return Alert.alert("Erro", dados.mensagem);
+      }
 
-      {/* Esqueci a senha */}
-      <TouchableOpacity>
-        <Text style={styles.forgotPassword}>Esqueci minha senha</Text>
-      </TouchableOpacity>
+      await AsyncStorage.setItem("@user", JSON.stringify(dados.usuario));
+      setLoading(false);
 
-      {/* Criar conta */}
-      <View style={styles.createAccountRow}>
-        <Text style={{ color: "#555" }}>Ainda não tem conta? </Text>
-        <TouchableOpacity>
-          <Text style={styles.createAccountText}>Criar conta</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
+      navigation.replace("questions");
+
+    } catch (error) {
+      setLoading(false);
+      Alert.alert("Erro", "Falha ao conectar ao servidor.");
+    }
+  }
+
 }
 
 const styles = StyleSheet.create({
