@@ -23,7 +23,7 @@ interface Product {
   nome: string;
   valor: number | string;
   imagem?: string;
-  categoria?: string;
+  categoriaId?: string;
   em_promocao?: boolean;
   isFavorite?: boolean;
   inCart?: boolean;
@@ -82,6 +82,26 @@ export default function HomeScreen() {
     }
   }
 
+
+
+/*async function fetchProducts(query: string = "") {
+    try {
+      const response = await fetch(
+        `https://qt8rqmzq-3000.brs.devtunnels.ms/api/produtos?search=${query}`
+      );
+      if (!response.ok) throw new Error("Erro ao buscar produtos");
+      const data: Product[] = await response.json();
+      const initialized = data.map((p) => ({
+        ...p,
+        isFavorite: false,
+        inCart: false,
+      }));
+      setProducts(initialized);
+    } catch (error) {
+      console.error(error);
+    }
+  }*/
+
   useEffect(() => {
     fetchProducts(search);
   }, [search]);
@@ -103,7 +123,7 @@ export default function HomeScreen() {
     const matchCategory =
       !selectedCategory || selectedCategory === "Produtos"
         ? true
-        : p.categoria === selectedCategory;
+        : p.categoriaId === selectedCategory;
     const matchPromo = showPromo ? p.em_promocao === true : true;
     return matchCategory && matchPromo;
   });
