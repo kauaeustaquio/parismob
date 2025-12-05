@@ -17,6 +17,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import LoginModal from "../../app/(tabs)/loginModal"; 
 
 interface Product {
   id?: number;
@@ -49,6 +50,10 @@ export default function HomeScreen() {
 
   // animação do carrinho vindo da direita
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
+
+  //login
+  const [loginVisible, setLoginVisible] = useState(false);
+  const [isLogged, setIsLogged] = useState(false);  
 
   useEffect(() => {
     if (cartVisible) {
@@ -172,11 +177,21 @@ export default function HomeScreen() {
         sum + parseFloat((p.valor || 0).toString().replace(",", ".")),
       0
     )
-    .toFixed(2);
-
+    .toFixed(2)
   return (
+    
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
+      <LoginModal
+        visible={loginVisible}
+        onClose={() => setLoginVisible(false)}
+        onLogin={(email, senha) => {
+          console.log("LOGANDO...", email, senha);
+          setIsLogged(true);
+        setLoginVisible(false);
+        }}>
+      </LoginModal>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -286,9 +301,13 @@ export default function HomeScreen() {
                     />
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={styles.buyButton}>
+                  <TouchableOpacity
+                    style={styles.buyButton}
+                    onPress={() => setLoginVisible(true)}
+                  >
                     <Text style={styles.buyButtonText}>COMPRAR</Text>
                   </TouchableOpacity>
+
                 </View>
               </View>
             ))
@@ -350,7 +369,10 @@ export default function HomeScreen() {
               <Text style={{ fontWeight: "bold" }}>
                 Total estimado: R$ {total}
               </Text>
-              <TouchableOpacity style={styles.finalizeButton}>
+                <TouchableOpacity
+                  style={styles.finalizeButton}
+                  onPress={() => setLoginVisible(true)}
+                >
                 <Text style={{ color: "#fff", fontWeight: "bold" }}>
                   Finalizar Compra
                 </Text>
