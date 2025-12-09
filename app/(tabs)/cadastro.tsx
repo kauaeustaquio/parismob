@@ -48,11 +48,19 @@ export default function Cadastro() {
                 setSenha("");
                 setTelefone("");
             } else {
-                // Não tenta ler JSON, apenas mostra status
-                Alert.alert(
-                    "Erro",
-                    `Erro ao cadastrar. Status: ${response.status}`
-                );
+                // Adiciona lógica específica para o 409
+                if (response.status === 409) {
+                    Alert.alert(
+                        "Cadastro Impossível",
+                        "Este e-mail ou nome de usuário já está sendo utilizado. Por favor, tente outro."
+                    );
+                } else {
+                    // Para outros erros (400, 500, etc.)
+                    Alert.alert(
+                        "Erro",
+                        `Erro ao cadastrar. Status: ${response.status}. Tente novamente.`
+                    );
+                }
             }
         } catch (error) {
             Alert.alert("Erro", "Falha na conexão com o servidor.");

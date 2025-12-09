@@ -3,7 +3,8 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { HapticTab } from '@/components/HapticTab';
+// Assumindo que esses imports estão corretos
+import { HapticTab } from '@/components/HapticTab'; 
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -14,16 +15,18 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#222',   // ícone ativo mais escuro
-        tabBarInactiveTintColor: '#888', // ícones inativos mais claros
-        tabBarButton: HapticTab,          
-        tabBarBackground: TabBarBackground, 
+        tabBarActiveTintColor: '#222', 
+        tabBarInactiveTintColor: '#888',
+        tabBarButton: HapticTab, 
+        tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: { position: 'absolute' },
           default: {},
         }),
       }}
     >
+      {/* TELAS QUE DEVEM APARECER NAS ABAS */}
+
       <Tabs.Screen
         name="index"
         options={{
@@ -51,6 +54,40 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
+        }}
+      />
+      
+      {/* TELAS QUE DEVEM SER OCULTADAS DA BARRA DE ABAS */}
+      
+      <Tabs.Screen
+        name="cadastro"
+        options={{
+          // ESSENCIAL: Oculta a aba da barra inferior
+          href: null, 
+        }}
+      />
+      
+      <Tabs.Screen
+        name="checkout"
+        options={{
+          // ESSENCIAL: Oculta a aba da barra inferior
+          href: null, 
+        }}
+      />
+
+      <Tabs.Screen
+        name="loginModal"
+        options={{
+          // ESSENCIAL: Oculta a aba da barra inferior
+          href: null,
+        }}
+      />
+      
+      {/* Oculta a rota de erro, se existir */}
+      <Tabs.Screen
+        name="+not-found"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
