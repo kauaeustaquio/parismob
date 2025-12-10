@@ -56,19 +56,20 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="checkout"
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person" size={size} color={color} />
+          ), 
+        }}
+      />
       
       {/* TELAS QUE DEVEM SER OCULTADAS DA BARRA DE ABAS */}
       
       <Tabs.Screen
         name="cadastro"
-        options={{
-          // ESSENCIAL: Oculta a aba da barra inferior
-          href: null, 
-        }}
-      />
-      
-      <Tabs.Screen
-        name="checkout"
         options={{
           // ESSENCIAL: Oculta a aba da barra inferior
           href: null, 

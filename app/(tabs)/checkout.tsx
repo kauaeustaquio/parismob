@@ -1,46 +1,57 @@
-// app/checkout.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity } from 'react-native';
-import { useLocalSearchParams, useRouter, Redirect } from 'expo-router';
+import { 
+    View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity 
+} from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons"; 
 
-// ====================================================================
-// ⚠️ PLACEHOLDER: useAuth (Hook de Autenticação)
-// ====================================================================
+// Simulação de autenticação
 const useAuth = () => {
-    // Simula que o usuário está carregando por 500ms e depois está logado.
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState<{ id: string } | null>(null);
 
     useEffect(() => {
         const timer = setTimeout(() => {
             setIsLoading(false);
-            // Simula um usuário logado.
-            setUser({ id: 'user123' }); 
+            setUser({ id: 'user123' });
         }, 500);
+
         return () => clearTimeout(timer);
     }, []);
+
     return { user, isLoading };
 };
-// ====================================================================
-
 
 export default function CheckoutScreen() {
-    const { user, isLoading } = useAuth(); 
+    const { user, isLoading } = useAuth();
     const router = useRouter();
-    
-    const { 
-        produtoId, 
-        nomeProduto, 
-        precoProduto 
-    } = useLocalSearchParams();
 
-    // 1. Redireciona para o login se não estiver logado
-    if (!user && !isLoading) {
-        return <Redirect href="/loginModal" />; 
-    }
+    // Parâmetros da rota
+    type Params = {
+        produtoId?: string;
+        nomeProduto?: string;
+        precoProduto?: string;
+    };
+    const params = useLocalSearchParams() as Params;
+    const { produtoId, nomeProduto, precoProduto } = params;
 
-    // 2. Tela de Carregamento
+    // Converte o preço
+    const preco = Number(precoProduto);
+
+    // Validação de parâmetros
+    useEffect(() => {
+        if (!user && !isLoading) {
+            router.push("/loginModal");
+        }
+
+        if (!produtoId || !nomeProduto || isNaN(preco) || preco <= 0) {
+            Alert.alert("Erro", "Detalhes do produto inválidos ou ausentes.", [
+                { text: "OK", onPress: () => router.push("/") }
+            ]);
+        }
+    }, [user, isLoading]);
+
+    // Tela de carregamento
     if (isLoading) {
         return (
             <View style={styles.loadingContainer}>
@@ -49,68 +60,55 @@ export default function CheckoutScreen() {
         );
     }
 
-    // 3. Processamento e validação dos dados do produto
-    const preco = parseFloat(precoProduto?.toString() || '0');
-    
-    if (!produtoId || isNaN(preco) || preco <= 0) {
-        Alert.alert("Erro", "Detalhes do produto inválidos ou ausentes.");
-        return <Redirect href="/" />;
-    }
-
-    // Lógica de Finalização da Compra
+    // Finalizar compra
     const handleFinalizePurchase = () => {
-        // Lógica de API aqui
         Alert.alert(
-            "Sucesso! 🎉", 
-            `Compra de ${nomeProduto} finalizada. Total: R$ ${preco.toFixed(2).replace('.', ',')}`,
-            [
-                { text: "OK", onPress: () => router.push('/') }
-            ]
+            "Sucesso! 🎉",
+            `Compra de ${nomeProduto} finalizada.\nTotal: R$ ${preco.toFixed(2).replace('.', ',')}`,
+            [{ text: "OK", onPress: () => router.push("/") }]
         );
     };
 
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Resumo da Compra</Text>
-            
+
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                
-                {/* Cartão do Produto */}
+                {/* Produto */}
                 <View style={styles.productCard}>
                     <Text style={styles.productName}>{nomeProduto}</Text>
-                    <Text style={styles.productPrice}>R$ {preco.toFixed(2).replace('.', ',')}</Text>
+                    <Text style={styles.productPrice}>
+                        R$ {preco.toFixed(2).replace('.', ',')}
+                    </Text>
                 </View>
 
-                {/* Valor Total */}
+                {/* Total */}
                 <View style={styles.totalContainer}>
                     <Text style={styles.totalLabel}>Valor total:</Text>
-                    <Text style={styles.totalValue}>R$ {preco.toFixed(2).replace('.', ',')}</Text>
+                    <Text style={styles.totalValue}>
+                        R$ {preco.toFixed(2).replace('.', ',')}
+                    </Text>
                 </View>
 
-                {/* Formas de Pagamento */}
+                {/* Pagamentos */}
                 <Text style={styles.paymentHeader}>Selecione a forma de pagamento</Text>
-                
-                {/* Opção PIX */}
+
                 <TouchableOpacity style={styles.paymentOption}>
-                    <Ionicons name="wallet-outline" size={24} color="#05182bff" />
+                    <Ionicons name="wallet-outline" size={24} color="#05182bFF" />
                     <Text style={styles.paymentText}>PIX</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#888" style={{ marginLeft: 'auto' }} />
+                    <Ionicons name="chevron-forward" size={20} color="#888" />
                 </TouchableOpacity>
 
-                {/* Opção Dinheiro */}
                 <TouchableOpacity style={styles.paymentOption}>
                     <Ionicons name="cash-outline" size={24} color="#28a745" />
                     <Text style={styles.paymentText}>Dinheiro Físico</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#888" style={{ marginLeft: 'auto' }} />
+                    <Ionicons name="chevron-forward" size={20} color="#888" />
                 </TouchableOpacity>
 
             </ScrollView>
-            
-            {/* Botão Finalizar Compra - Fixo na parte inferior */}
-            <TouchableOpacity 
-                style={styles.finalizeButton}
-                onPress={handleFinalizePurchase}
-            >
+
+            {/* Botão Finalizar */}
+            <TouchableOpacity style={styles.finalizeButton} onPress={handleFinalizePurchase}>
                 <Text style={styles.finalizeButtonText}>FINALIZAR COMPRA</Text>
             </TouchableOpacity>
         </View>
@@ -124,9 +122,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     container: { flex: 1, backgroundColor: '#fff', padding: 20 },
-    header: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: '#05182bff' },
+    header: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: '#05182bFF' },
     scrollContent: { paddingBottom: 20 },
-    
+
     productCard: {
         backgroundColor: '#f8f8f8',
         padding: 15,
@@ -134,10 +132,9 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
     },
     productName: { fontSize: 16, fontWeight: '600' },
-    productPrice: { fontSize: 16, fontWeight: 'bold', color: '#05182bff' },
+    productPrice: { fontSize: 16, fontWeight: 'bold', color: '#05182bFF' },
 
     totalContainer: {
         flexDirection: 'row',
@@ -149,9 +146,10 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     totalLabel: { fontSize: 18, fontWeight: '500' },
-    totalValue: { fontSize: 18, fontWeight: 'bold', color: '#05182bff' },
+    totalValue: { fontSize: 18, fontWeight: 'bold', color: '#05182bFF' },
 
     paymentHeader: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#333' },
+
     paymentOption: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -159,16 +157,11 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 10,
         marginBottom: 10,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 1,
-        elevation: 1,
     },
     paymentText: { marginLeft: 10, fontSize: 16, flex: 1 },
 
     finalizeButton: {
-        backgroundColor: '#05182bff',
+        backgroundColor: '#05182bFF',
         padding: 15,
         borderRadius: 12,
         alignItems: 'center',
@@ -180,3 +173,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 });
+
