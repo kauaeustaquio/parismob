@@ -54,6 +54,8 @@ export default function HomeScreen() {
     const [search, setSearch] = useState<string>("");
     const [selectedCategory, setSelectedCategory] = useState<string | null>('produtos');
     const [showPromo, setShowPromo] = useState<boolean>(false);
+    const [pendingCheckout, setPendingCheckout] = useState(false);
+
 
     const screenWidth = Dimensions.get("window").width;
     const slideAnim = useRef(new Animated.Value(screenWidth)).current;
@@ -178,7 +180,37 @@ export default function HomeScreen() {
         .toFixed(2)
         .replace(".", ",");
 
-    // --------------------- RENDER ---------------------
+    async function handleLogin(email: string, senha: string) {
+    try {
+        const response = await fetch(
+            "https://qt8rqmzq-3000.brs.devtunnels.ms/api/clientes",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email, senha }),
+            }
+        );
+
+        if (!response.ok) {
+            Alert.alert("Erro", "E-mail ou senha incorretos.");
+            return;
+        }
+
+        const data = await response.json();
+        console.log("LOGIN OK >>", data);
+
+        // Aqui você salva que o usuário logou
+        setIsLogged(true);
+        setLoginVisible(false);
+
+    } catch (error) {
+        console.log("Erro no login:", error);
+        Alert.alert("Erro", "Não foi possível realizar o login.");
+    }
+}
+
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#fff" />
@@ -191,9 +223,17 @@ export default function HomeScreen() {
                     console.log("LOGANDO...", email, senha);
                     setIsLogged(true);
                     setLoginVisible(false);
+
+                    // Se o usuário tentou finalizar a compra antes de logar, redireciona para o checkout
+                    if (pendingCheckout) {
+                    setPendingCheckout(false);
+                    router.push("/checkout");
+                    }
                 }}
                 goToCadastro={goToCadastro}
             />
+
+
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <Image
@@ -354,16 +394,19 @@ export default function HomeScreen() {
                                 style={styles.finalizeButton}
                                 onPress={() => {
                                     if (isLogged) {
-                                        Alert.alert("Ação Necessária", "Implemente a navegação para o Checkout de Múltiplos Itens!");
+                                    // Aqui você pode navegar para o checkout
+                                    router.push("/checkout");
                                     } else {
-                                        setCartVisible(false);
-                                        setLoginVisible(true);
+                                    setPendingCheckout(true); // guarda a intenção
+                                    setLoginVisible(true);     // abre o login
                                     }
                                 }}
                                 disabled={cartItems.length === 0}
-                            >
+                                >
                                 <Text style={{ color: "#fff", fontWeight: "bold" }}>Finalizar Compra</Text>
                             </TouchableOpacity>
+
+
                         </View>
                     </Animated.View>
                 </View>

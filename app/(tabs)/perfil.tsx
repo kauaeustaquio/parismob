@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,24 +11,44 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-export default function Perfil() {
-  // Valores de exemplo
-  const exampleNome = "Maria da Silva Pereira";
-  const exampleEmail = "maria.dasilva@gmail.com";
-  const exampleSenha = "********";
-  const exampleTelefone = "(83) 99654-6757";
+// Recebe props de usuário e status de login
+interface PerfilProps {
+  user?: {
+    nome?: string;
+    email?: string;
+    senha?: string;
+    telefone?: string;
+  };
+  isLogged: boolean;
+}
 
-  // Estados reais do usuário
-  const [nome, setNome] = useState("");
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [telefone, setTelefone] = useState("");
+export default function Perfil({ user, isLogged }: PerfilProps) {
+  // Estados do usuário
+  const [nome, setNome] = useState(user?.nome || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [senha, setSenha] = useState(user?.senha || "");
+  const [telefone, setTelefone] = useState(user?.telefone || "");
 
-  // Estados de foco
+  // Estados de foco para placeholders
   const [focusedNome, setFocusedNome] = useState(false);
   const [focusedEmail, setFocusedEmail] = useState(false);
   const [focusedSenha, setFocusedSenha] = useState(false);
   const [focusedTelefone, setFocusedTelefone] = useState(false);
+
+  // Atualiza os estados quando o usuário loga
+  useEffect(() => {
+    if (user) {
+      setNome(user.nome || "");
+      setEmail(user.email || "");
+      setSenha(user.senha || "");
+      setTelefone(user.telefone || "");
+    } else {
+      setNome("");
+      setEmail("");
+      setSenha("");
+      setTelefone("");
+    }
+  }, [user]);
 
   // Função para confirmar logout
   const handleLogout = () => {
@@ -48,17 +68,20 @@ export default function Perfil() {
       {/* Cabeçalho */}
       <View style={styles.header}>
         <View style={styles.profileContainer}>
-          {/* Ícone de foto com borda */}
           <View style={styles.photoContainer}>
             <Ionicons name="person-circle-outline" size={90} color="#000" />
           </View>
-          <Text style={styles.profileName}>{nome || exampleNome}</Text>
 
-          {/* Botão de logout abaixo do nome */}
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={18} color="#fff" />
-            <Text style={styles.logoutText}>Sair</Text>
-          </TouchableOpacity>
+          <Text style={styles.profileName}>
+            {isLogged ? nome || "Usuário" : ""}
+          </Text>
+
+          {isLogged && (
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <Ionicons name="log-out-outline" size={18} color="#fff" />
+              <Text style={styles.logoutText}>Sair</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -76,7 +99,8 @@ export default function Perfil() {
               onChangeText={setNome}
               onFocus={() => setFocusedNome(true)}
               onBlur={() => setFocusedNome(false)}
-              placeholder={focusedNome ? "" : exampleNome}
+              placeholder={isLogged ? "" : "Digite seu nome"}
+              editable={isLogged}
             />
             <TouchableOpacity onPress={() => setFocusedNome(true)}>
               <Ionicons name="create-outline" size={18} color="#888" />
@@ -94,7 +118,8 @@ export default function Perfil() {
               onChangeText={setEmail}
               onFocus={() => setFocusedEmail(true)}
               onBlur={() => setFocusedEmail(false)}
-              placeholder={focusedEmail ? "" : exampleEmail}
+              placeholder={isLogged ? "" : "Digite seu email"}
+              editable={isLogged}
             />
             <TouchableOpacity onPress={() => setFocusedEmail(true)}>
               <Ionicons name="create-outline" size={18} color="#888" />
@@ -113,7 +138,8 @@ export default function Perfil() {
               onChangeText={setSenha}
               onFocus={() => setFocusedSenha(true)}
               onBlur={() => setFocusedSenha(false)}
-              placeholder={focusedSenha ? "" : exampleSenha}
+              placeholder={isLogged ? "" : "Digite sua senha"}
+              editable={isLogged}
             />
             <TouchableOpacity onPress={() => setFocusedSenha(true)}>
               <Ionicons name="create-outline" size={18} color="#888" />
@@ -131,7 +157,8 @@ export default function Perfil() {
               onChangeText={setTelefone}
               onFocus={() => setFocusedTelefone(true)}
               onBlur={() => setFocusedTelefone(false)}
-              placeholder={focusedTelefone ? "" : exampleTelefone}
+              placeholder={isLogged ? "" : "Digite seu telefone"}
+              editable={isLogged}
             />
             <TouchableOpacity onPress={() => setFocusedTelefone(true)}>
               <Ionicons name="create-outline" size={18} color="#888" />
