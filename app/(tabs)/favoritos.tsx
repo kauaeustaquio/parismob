@@ -28,7 +28,7 @@ export default function Favoritos() {
   const [loading, setLoading] = useState(true);
 
   const clienteId = 1;
-  const API_BASE = "https://qt8rqmzq-3000.brs.devtunnels.ms/api/favoritos";
+  const API_BASE = "https://x19x6q9t-3000.brs.devtunnels.ms/api/favoritos";
 
   // Buscar favoritos da API
   const fetchFavoritos = async () => {

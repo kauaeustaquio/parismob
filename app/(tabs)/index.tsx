@@ -82,36 +82,44 @@ export default function HomeScreen() {
         }
     }, [cartVisible]);
 
-    async function fetchCategories(query: string = "") {
-        const categoriesUrl = `https://qt8rqmzq-3000.brs.devtunnels.ms/api/categorias?search=${query}`;
-        try {
-            const response = await fetch(categoriesUrl);
-            if (!response.ok) throw new Error("Erro ao buscar categorias");
-            const data: WebCategory[] = await response.json();
-            setCategories(data);
-        } catch (error) {
-            console.error("Erro ao buscar categorias:", error);
-            setCategories([]);
-        }
+    async function fetchCategories() {
+    const categoriesUrl = "https://x19x6q9t-3000.brs.devtunnels.ms/api/categorias";
+
+    try {
+        const response = await fetch(categoriesUrl);
+
+        if (!response.ok) throw new Error("Erro ao buscar categorias");
+
+        const data: WebCategory[] = await response.json();
+        setCategories(data);
+    } catch (error) {
+        console.error("Erro ao buscar categorias:", error);
+        setCategories([]);
     }
+}
 
     async function fetchProducts(query: string = "") {
-        try {
-            const response = await fetch(
-                `https://qt8rqmzq-3000.brs.devtunnels.ms/api/produtos?search=${query}`
-            );
-            if (!response.ok) throw new Error("Erro ao buscar produtos");
-            const data: Product[] = await response.json();
-            const initialized = data.map((p) => ({
-                ...p,
-                isFavorite: false,
-                inCart: false,
-            }));
-            setProducts(initialized);
-        } catch (error) {
-            console.error(error);
-        }
+    try {
+        const response = await fetch(
+            `https://x19x6q9t-3000.brs.devtunnels.ms/api/produtos?search=${query}`
+        );
+
+        if (!response.ok) throw new Error("Erro ao buscar produtos");
+
+        const data: Product[] = await response.json();
+
+        const initialized = data.map(p => ({
+            ...p,
+            isFavorite: false,
+            inCart: false,
+        }));
+
+        setProducts(initialized);
+    } catch (error) {
+        console.error("Erro ao buscar produtos:", error);
     }
+}
+
 
     useEffect(() => { fetchProducts(search); }, [search]);
     useEffect(() => { fetchCategories(); }, []);
@@ -137,7 +145,6 @@ export default function HomeScreen() {
         return matchCategory && matchPromo;
     });
 
-    // --------------------- FAVORITOS E CARRINHO ---------------------
     const toggleFavorite = (index: number) => {
         const updated = [...displayedProducts];
         updated[index].isFavorite = !updated[index].isFavorite;
@@ -183,7 +190,7 @@ export default function HomeScreen() {
     async function handleLogin(email: string, senha: string) {
     try {
         const response = await fetch(
-            "https://qt8rqmzq-3000.brs.devtunnels.ms/api/clientes",
+            "https://x19x6q9t-3000.brs.devtunnels.ms/api/clientes",
             {
                 method: "POST",
                 headers: {
