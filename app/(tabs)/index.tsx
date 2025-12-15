@@ -20,11 +20,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import LoginModal from "../../app/(tabs)/loginModal";
 
+
 interface WebCategory {
     id: string;
     nome: string;
     imagem_url: string | null;
 }
+
 
 interface DisplayCategory {
     id: string;
@@ -33,6 +35,7 @@ interface DisplayCategory {
     isPromo?: boolean;
     isAllProducts?: boolean;
 }
+
 
 interface Product {
     id?: number;
@@ -45,8 +48,10 @@ interface Product {
     inCart?: boolean;
 }
 
+
 export default function HomeScreen() {
     const router = useRouter();
+
 
     const [cartVisible, setCartVisible] = useState<boolean>(false);
     const [products, setProducts] = useState<Product[]>([]);
@@ -57,18 +62,23 @@ export default function HomeScreen() {
     const [pendingCheckout, setPendingCheckout] = useState(false);
 
 
+
+
     const screenWidth = Dimensions.get("window").width;
     const slideAnim = useRef(new Animated.Value(screenWidth)).current;
+
 
     // ESTADO DE LOGIN
     const [loginVisible, setLoginVisible] = useState(false);
     const [isLogged, setIsLogged] = useState(false);
     const clienteId = 1; // ID do usuário logado, substitua conforme necessário
 
+
     const goToCadastro = () => {
         setLoginVisible(false);
         router.push('/cadastro');
     };
+
 
     useEffect(() => {
         if (cartVisible) {
@@ -82,47 +92,43 @@ export default function HomeScreen() {
         }
     }, [cartVisible]);
 
-    async function fetchCategories() {
-    const categoriesUrl = "https://x19x6q9t-3000.brs.devtunnels.ms/api/categorias";
 
-    try {
-        const response = await fetch(categoriesUrl);
-
-        if (!response.ok) throw new Error("Erro ao buscar categorias");
-
-        const data: WebCategory[] = await response.json();
-        setCategories(data);
-    } catch (error) {
-        console.error("Erro ao buscar categorias:", error);
-        setCategories([]);
+    async function fetchCategories(query: string = "") {
+        const categoriesUrl = `https://x19x6q9t-3000.brs.devtunnels.ms/api/categorias?search=${query}`;
+        try {
+            const response = await fetch(categoriesUrl);
+            if (!response.ok) throw new Error("Erro ao buscar categorias");
+            const data: WebCategory[] = await response.json();
+            setCategories(data);
+        } catch (error) {
+            console.error("Erro ao buscar categorias:", error);
+            setCategories([]);
+        }
     }
-}
+
 
     async function fetchProducts(query: string = "") {
-    try {
-        const response = await fetch(
-            `https://x19x6q9t-3000.brs.devtunnels.ms/api/produtos?search=${query}`
-        );
-
-        if (!response.ok) throw new Error("Erro ao buscar produtos");
-
-        const data: Product[] = await response.json();
-
-        const initialized = data.map(p => ({
-            ...p,
-            isFavorite: false,
-            inCart: false,
-        }));
-
-        setProducts(initialized);
-    } catch (error) {
-        console.error("Erro ao buscar produtos:", error);
+        try {
+            const response = await fetch(
+                `https://x19x6q9t-3000.brs.devtunnels.ms/api/produtos?search=${query}`
+            );
+            if (!response.ok) throw new Error("Erro ao buscar produtos");
+            const data: Product[] = await response.json();
+            const initialized = data.map((p) => ({
+                ...p,
+                isFavorite: false,
+                inCart: false,
+            }));
+            setProducts(initialized);
+        } catch (error) {
+            console.error(error);
+        }
     }
-}
 
 
     useEffect(() => { fetchProducts(search); }, [search]);
     useEffect(() => { fetchCategories(); }, []);
+
 
     const webCategoriesToDisplay: DisplayCategory[] = categories.map(cat => ({
         id: cat.id,
@@ -130,11 +136,13 @@ export default function HomeScreen() {
         img: cat.imagem_url || "https://via.placeholder.com/90",
     }));
 
+
     const displayedCategories: DisplayCategory[] = [
         { id: 'promocoes', name: "Promoções", img: require("../../assets/images/promo.png"), isPromo: true },
         { id: 'produtos', name: "Produtos", img: require("../../assets/images/todos.png"), isAllProducts: true },
         ...webCategoriesToDisplay
     ];
+
 
     const displayedProducts = products.filter((p) => {
         let matchCategory = true;
@@ -145,14 +153,51 @@ export default function HomeScreen() {
         return matchCategory && matchPromo;
     });
 
-    const toggleFavorite = (index: number) => {
-        const updated = [...displayedProducts];
-        updated[index].isFavorite = !updated[index].isFavorite;
-        const allProducts = products.map((p) =>
-            p.id === updated[index].id ? updated[index] : p
-        );
-        setProducts(allProducts);
-    };
+
+    // --------------------- FAVORITOS E CARRINHO ---------------------
+    // --------------------- FAVORITOS ---------------------
+const API_FAVORITOS = "https://x19x6q9t-3000.brs.devtunnels.ms/api/favoritos";
+
+
+const toggleFavorite = async (produto: Product) => {
+  try {
+    let response;
+    if (produto.isFavorite) {
+      response = await fetch(`${API_FAVORITOS}/${produto.id}`, {
+        method: "DELETE",
+      });
+    } else {
+      response = await fetch(API_FAVORITOS, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cliente_id: clienteId, produto_id: produto.id }),
+      });
+    }
+
+
+    // DEBUG: imprimir status e texto da resposta
+    const text = await response.text();
+    console.log("DEBUG resposta API:", response.status, text);
+
+
+    if (!response.ok) throw new Error(`Erro ao atualizar favorito: ${response.status}`);
+
+
+    // Atualiza estado local
+    const updatedProducts = products.map((p) =>
+      p.id === produto.id ? { ...p, isFavorite: !p.isFavorite } : p
+    );
+    setProducts(updatedProducts);
+  } catch (error) {
+    console.error(error);
+    Alert.alert("Erro", "Não foi possível atualizar o favorito.");
+  }
+};
+
+
+
+
+
 
     const toggleCartItem = (index: number) => {
         const updated = [...displayedProducts];
@@ -163,12 +208,14 @@ export default function HomeScreen() {
         setProducts(allProducts);
     };
 
+
     const removeFromCart = (product: Product) => {
         const updated = products.map((p) =>
             p.id === product.id ? { ...p, inCart: false } : p
         );
         setProducts(updated);
     };
+
 
     const confirmRemove = (product: Product) => {
         Alert.alert(
@@ -181,11 +228,13 @@ export default function HomeScreen() {
         );
     };
 
+
     const cartItems = products.filter((p) => p.inCart);
     const total = cartItems
         .reduce((sum, p) => sum + parseFloat((p.valor || 0).toString().replace(",", ".")), 0)
         .toFixed(2)
         .replace(".", ",");
+
 
     async function handleLogin(email: string, senha: string) {
     try {
@@ -200,17 +249,21 @@ export default function HomeScreen() {
             }
         );
 
+
         if (!response.ok) {
             Alert.alert("Erro", "E-mail ou senha incorretos.");
             return;
         }
 
+
         const data = await response.json();
         console.log("LOGIN OK >>", data);
+
 
         // Aqui você salva que o usuário logou
         setIsLogged(true);
         setLoginVisible(false);
+
 
     } catch (error) {
         console.log("Erro no login:", error);
@@ -218,9 +271,11 @@ export default function HomeScreen() {
     }
 }
 
+
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
 
             {/* --------------------- LOGIN MODAL --------------------- */}
             <LoginModal
@@ -230,6 +285,7 @@ export default function HomeScreen() {
                     console.log("LOGANDO...", email, senha);
                     setIsLogged(true);
                     setLoginVisible(false);
+
 
                     // Se o usuário tentou finalizar a compra antes de logar, redireciona para o checkout
                     if (pendingCheckout) {
@@ -242,12 +298,16 @@ export default function HomeScreen() {
 
 
 
+
+
+
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <Image
                     source={require("../../assets/images/logo.produtosd'paris(1)(1).png")}
                     style={styles.logo}
                     resizeMode="contain"
                 />
+
 
                 {/* --------------------- BUSCA --------------------- */}
                 <View style={styles.searchRow}>
@@ -261,6 +321,7 @@ export default function HomeScreen() {
                         <Ionicons name="search" size={22} color="#333" style={{ marginLeft: 8 }} />
                     </View>
 
+
                     <TouchableOpacity
                         style={styles.cartButton}
                         onPress={() => setCartVisible(true)}
@@ -268,6 +329,7 @@ export default function HomeScreen() {
                         <Ionicons name="cart" size={28} color="#333" />
                     </TouchableOpacity>
                 </View>
+
 
                 {/* --------------------- CATEGORIAS --------------------- */}
                 <FlatList
@@ -307,7 +369,9 @@ export default function HomeScreen() {
                     )}
                 />
 
+
                 <Text style={styles.launchTitle}>{showPromo ? "Promoções" : "Produtos"}</Text>
+
 
                 {/* --------------------- PRODUTOS --------------------- */}
                 <View style={styles.productsContainer}>
@@ -325,14 +389,19 @@ export default function HomeScreen() {
                                     .replace(".", ",")}
                             </Text>
 
+
                             <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%", marginTop: 6, alignItems: 'center' }}>
-                                <TouchableOpacity onPress={() => toggleFavorite(index)} style={{ padding: 6 }}>
+                                <TouchableOpacity
+                                    onPress={() => toggleFavorite(produto)}
+                                    style={{ padding: 6, marginRight: 8 }}
+                                >
                                     <Ionicons
                                         name={produto.isFavorite ? "heart" : "heart-outline"}
                                         size={22}
-                                        color={produto.isFavorite ? "red" : "#333"}
+                                        color={produto.isFavorite ? "#FF6347" : "#333"}
                                     />
                                 </TouchableOpacity>
+
 
                                 <TouchableOpacity onPress={() => toggleCartItem(index)} style={{ padding: 6 }}>
                                     <Ionicons
@@ -341,6 +410,7 @@ export default function HomeScreen() {
                                         color={produto.inCart ? "#05182bff" : "#333"}
                                     />
                                 </TouchableOpacity>
+
 
                                 <TouchableOpacity
                                     style={styles.buyButton}
@@ -378,6 +448,7 @@ export default function HomeScreen() {
                             </TouchableOpacity>
                         </View>
 
+
                         <ScrollView style={{ marginVertical: 10 }}>
                             {cartItems.length > 0 ? cartItems.map((item, index) => (
                                 <View key={item.id || index} style={styles.cartItem}>
@@ -395,6 +466,7 @@ export default function HomeScreen() {
                             )) : <Text style={{ textAlign: "center", marginTop: 20 }}>Carrinho vazio.</Text>}
                         </ScrollView>
 
+
                         <View style={styles.cartFooter}>
                             <Text style={{ fontWeight: "bold" }}>Total estimado: R$ {total}</Text>
                             <TouchableOpacity
@@ -408,10 +480,13 @@ export default function HomeScreen() {
                                     setLoginVisible(true);     // abre o login
                                     }
                                 }}
-                                disabled={cartItems.length === 0}
+                                disabled={cartItems.length === 1}
                                 >
+                           
                                 <Text style={{ color: "#fff", fontWeight: "bold" }}>Finalizar Compra</Text>
                             </TouchableOpacity>
+
+
 
 
                         </View>
@@ -421,6 +496,8 @@ export default function HomeScreen() {
         </SafeAreaView>
     );
 }
+
+
 
 
 const styles = StyleSheet.create({

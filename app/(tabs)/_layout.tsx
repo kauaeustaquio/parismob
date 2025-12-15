@@ -60,9 +60,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="checkout"
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
-          ), 
+          href: null,
         }}
       />
       

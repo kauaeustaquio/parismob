@@ -26,6 +26,12 @@ export default function Cadastro() {
             Alert.alert("Atenção", "Preencha todos os campos.");
             return;
         }
+        console.log({
+            nome,
+            email,
+            senha_hash,
+            telefone,
+        });
 
         try {
             const response = await fetch(API_URL, {
@@ -36,10 +42,12 @@ export default function Cadastro() {
                 body: JSON.stringify({
                     nome,
                     email,
-                    senha_hash,
+                    senha: senha_hash,
                     telefone,
                 }),
             });
+
+            const data = await response.json();
 
             if (response.ok) {
                 Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
@@ -48,25 +56,18 @@ export default function Cadastro() {
                 setSenha("");
                 setTelefone("");
             } else {
-                // Adiciona lógica específica para o 409
-                if (response.status === 409) {
-                    Alert.alert(
-                        "Cadastro Impossível",
-                        "Este e-mail ou nome de usuário já está sendo utilizado. Por favor, tente outro."
-                    );
-                } else {
-                    // Para outros erros (400, 500, etc.)
-                    Alert.alert(
-                        "Erro",
-                        `Erro ao cadastrar. Status: ${response.status}. Tente novamente.`
-                    );
-                }
+                Alert.alert(
+                    "Erro ao cadastrar",
+                    data.message || `Erro ${response.status}`
+                );
+                console.log("Erro da API:", data);
             }
-        } catch (error) {
-            Alert.alert("Erro", "Falha na conexão com o servidor.");
-            console.error(error);
-        }
-    };
+
+                    } catch (error) {
+                        Alert.alert("Erro", "Falha na conexão com o servidor.");
+                        console.error(error);
+                    }
+                };
 
     return (
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
