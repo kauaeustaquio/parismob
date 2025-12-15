@@ -58,12 +58,13 @@ export default function Favoritos() {
         // Mapeando e adicionando a flag 'isFavorito' para cada item
         const produtosComFlag = favoritos.map((p: any) => ({
           id: p.id,
-          nome: p.nome || p.name,  // Checando nome correto
-          preco: p.preco || p.price,  // Checando preço correto
-          imageUrl: p.imageUrl || p.image_url, // Checando URL da imagem
+          nome: p.nome,          // ou p.name, se a API usar inglês
+          preco: p.valor,        // aqui estava 'preco', mas a API retorna 'valor'
+          imageUrl: p.imagem,    // aqui estava 'imageUrl', mas a API retorna 'imagem'
           favorito_id: p.favorito_id,
           isFavorito: true,
         }));
+
         setProdutos(produtosComFlag);
       } else {
         Alert.alert("Erro", "Nenhum favorito encontrado.");

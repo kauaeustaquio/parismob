@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const API_URL = "https://x19x6q9t-3000.brs.devtunnels.ms/api/clientes/signup";
+const API_URL = "https://x19x6q9t-3000.brs.devtunnels.ms";
 
 export default function Cadastro() {
     const [nome, setNome] = useState("");
@@ -34,7 +34,7 @@ export default function Cadastro() {
         });
 
         try {
-            const response = await fetch(API_URL, {
+            const response = await fetch(`${API_URL}/api/clientes/signup`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

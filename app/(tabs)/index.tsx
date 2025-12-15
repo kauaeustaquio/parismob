@@ -94,7 +94,7 @@ export default function HomeScreen() {
 
 
     async function fetchCategories(query: string = "") {
-        const categoriesUrl = `https://x19x6q9t-3000.brs.devtunnels.ms/api/categorias?search=${query}`;
+        const categoriesUrl = `https://x19x6q9t-3000.brs.devtunnels.ms/api/categorias`;
         try {
             const response = await fetch(categoriesUrl);
             if (!response.ok) throw new Error("Erro ao buscar categorias");
@@ -107,26 +107,29 @@ export default function HomeScreen() {
     }
 
 
-    async function fetchProducts(query: string = "") {
-        try {
-            const response = await fetch(
-                `https://x19x6q9t-3000.brs.devtunnels.ms/api/produtos?search=${query}`
-            );
-            if (!response.ok) throw new Error("Erro ao buscar produtos");
-            const data: Product[] = await response.json();
-            const initialized = data.map((p) => ({
-                ...p,
-                isFavorite: false,
-                inCart: false,
-            }));
-            setProducts(initialized);
-        } catch (error) {
-            console.error(error);
+    async function fetchProducts(categoryId: string | null = null, query: string = "") {
+    try {
+        let url = `https://x19x6q9t-3000.brs.devtunnels.ms/api/produtos`;
+        if (categoryId && categoryId !== 'produtos') {
+            url += `?categoria_id=${categoryId}`;
         }
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Erro ao buscar produtos");
+        const data: Product[] = await response.json();
+
+        setProducts(data);
+    } catch (error) {
+        console.error(error);
     }
+}
 
 
-    useEffect(() => { fetchProducts(search); }, [search]);
+
+    useEffect(() => {
+    fetchProducts(selectedCategory, search);
+}, [selectedCategory, search]);
+
     useEffect(() => { fetchCategories(); }, []);
 
 
@@ -297,10 +300,6 @@ const toggleFavorite = async (produto: Product) => {
             />
 
 
-
-
-
-
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <Image
                     source={require("../../assets/images/logo.produtosd'paris(1)(1).png")}
@@ -376,7 +375,8 @@ const toggleFavorite = async (produto: Product) => {
                 {/* --------------------- PRODUTOS --------------------- */}
                 <View style={styles.productsContainer}>
                     {displayedProducts.length > 0 ? displayedProducts.map((produto, index) => (
-                        <View key={produto.id || index} style={styles.productCard}>
+                       <View key={String(produto.id)} style={styles.productCard}>
+
                             <Image
                                 source={{ uri: produto.imagem || "https://via.placeholder.com/80" }}
                                 style={styles.productImage}
