@@ -15,7 +15,6 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-
 interface Produto {
   id: number;
   nome: string;
@@ -25,42 +24,29 @@ interface Produto {
   favorito_id: number; // controle local do coração
 }
 
-
 export default function Favoritos() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
 
-
   const clienteId = 1;
   const API_BASE = "https://qt8rqmzq-3000.brs.devtunnels.ms/api/favoritos";
-
 
   // Buscar favoritos da API
   const fetchFavoritos = async () => {
     try {
-      // Adicionando log para verificar a URL e a resposta da API
       console.log(`Buscando favoritos para cliente_id=${clienteId}`);
-
       const response = await fetch(`${API_BASE}?cliente_id=${clienteId}`);
       const data = await response.json();
-
-
-      // Verificando o formato da resposta da API
       console.log("Resposta da API:", data);
 
-
-      // Supondo que a resposta da API tenha um campo 'favoritos' ou algo similar
       const favoritos = data.favoritos || data;  // Tenta pegar favoritos se existir
 
-
-      // Verifica se os dados estão corretos
       if (Array.isArray(favoritos)) {
-        // Mapeando e adicionando a flag 'isFavorito' para cada item
         const produtosComFlag = favoritos.map((p: any) => ({
           id: p.id,
-          nome: p.nome,          // ou p.name, se a API usar inglês
-          preco: p.valor,        // aqui estava 'preco', mas a API retorna 'valor'
-          imageUrl: p.imagem,    // aqui estava 'imageUrl', mas a API retorna 'imagem'
+          nome: p.nome,
+          preco: p.valor,
+          imageUrl: p.imagem,
           favorito_id: p.favorito_id,
           isFavorito: true,
         }));
@@ -77,44 +63,42 @@ export default function Favoritos() {
     }
   };
 
-
   useEffect(() => {
     fetchFavoritos();
   }, []);
-
 
   // Alternar favorito
   const toggleFavorito = async (produto: Produto & { favorito_id?: number }) => {
     const isFavorito = produto.isFavorito;
 
-
     try {
       if (isFavorito) {
-        // Remover favorito usando favorito_id
+        // Desfavoritar: Remover favorito usando favorito_id
         const response = await fetch(`${API_BASE}/${produto.favorito_id}`, {
           method: "DELETE",
         });
+
         if (!response.ok) throw new Error("Erro ao remover favorito");
 
-
-        // Atualizar estado local: remove da lista
+        // Atualizar estado local: Remove da lista
         setProdutos((prev) =>
-          prev.filter((p) => p.favorito_id !== produto.favorito_id)
+          prev.map((p) =>
+            p.id === produto.id ? { ...p, isFavorito: false, favorito_id: 0 } : p
+          )
         );
       } else {
-        // Adicionar favorito
+        // Favoritar: Adicionar favorito
         const response = await fetch(API_BASE, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ cliente_id: clienteId, produto_id: produto.id }),
         });
-        if (!response.ok) throw new Error("Erro ao adicionar favorito");
 
+        if (!response.ok) throw new Error("Erro ao adicionar favorito");
 
         const data = await response.json();
 
-
-        // Atualizar estado local: marca como favorito e adiciona favorito_id
+        // Atualizar estado local: Marca como favorito e adiciona favorito_id
         setProdutos((prev) =>
           prev.map((p) =>
             p.id === produto.id ? { ...p, isFavorito: true, favorito_id: data.favorito_id } : p
@@ -126,7 +110,6 @@ export default function Favoritos() {
       Alert.alert("Erro", "Não foi possível atualizar o favorito.");
     }
   };
-
 
   const renderProduto = ({ item }: { item: Produto }) => (
     <View style={styles.card}>
@@ -142,17 +125,15 @@ export default function Favoritos() {
         <Ionicons
           name="heart"
           size={24}
-          color={item.isFavorito ? "#FF6347" : "#ccc"}
+          color={item.isFavorito ? "#FF6347" : "#ccc"} // vermelho se favorito, cinza caso contrário
         />
       </TouchableOpacity>
     </View>
   );
 
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
 
       <View style={styles.searchRow}>
         <View style={styles.searchWrapper}>
@@ -168,7 +149,6 @@ export default function Favoritos() {
           <Ionicons name="cart" size={26} color="#333" />
         </TouchableOpacity>
       </View>
-
 
       {loading ? (
         <ActivityIndicator size="large" color="#000" style={{ marginTop: 20 }} />
@@ -188,7 +168,6 @@ export default function Favoritos() {
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff", paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 },
