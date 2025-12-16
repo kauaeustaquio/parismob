@@ -32,7 +32,7 @@ export default function Favoritos() {
 
 
   const clienteId = 1;
-  const API_BASE = "https://x19x6q9t-3000.brs.devtunnels.ms/api/favoritos";
+  const API_BASE = "https://qt8rqmzq-3000.brs.devtunnels.ms/api/favoritos";
 
 
   // Buscar favoritos da API
@@ -40,7 +40,7 @@ export default function Favoritos() {
     try {
       // Adicionando log para verificar a URL e a resposta da API
       console.log(`Buscando favoritos para cliente_id=${clienteId}`);
-     
+
       const response = await fetch(`${API_BASE}?cliente_id=${clienteId}`);
       const data = await response.json();
 

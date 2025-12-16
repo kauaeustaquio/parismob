@@ -6,7 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Modal, 
+  Modal,
   Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -18,45 +18,52 @@ interface LoginModalProps {
   goToCadastro: () => void;
 }
 
-export default function LoginModal({ visible, onClose, onLogin, goToCadastro }: LoginModalProps) {
+export default function LoginModal({
+  visible,
+  onClose,
+  onLogin,
+  goToCadastro,
+}: LoginModalProps) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Torne a função handleLogin async
+  // ⚠️ AJUSTE A URL CONFORME SEU AMBIENTE
+  const API_BASE = "https://qt8rqmzq-3000.brs.devtunnels.ms/";
+
   const handleLogin = async () => {
-  try {
-    const response = await fetch(
-      "https://lrqzgzqc-3000.brs.devtunnels.ms/login",
-      {
+    if (!email || !senha) {
+      Alert.alert("Erro", "Preencha email e senha");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}api/clientes/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, senha }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        Alert.alert("Erro", data.msg || "Falha no login");
+        return;
       }
-    );
 
-    const data = await response.json();
-
-    console.log("Status HTTP:", response.status);
-    console.log("Resposta da API:", data);
-
-    if (response.ok) {
       await AsyncStorage.setItem("user", JSON.stringify(data));
+
       Alert.alert("Sucesso", "Login realizado!");
       onClose();
-    } else {
-      Alert.alert("Erro", data.message || "Falha no login");
+    } catch (error) {
+      console.log("Erro de conexão:", error);
+      Alert.alert("Erro", "Não foi possível conectar ao servidor");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.log("Erro de conexão:", error);
-    Alert.alert("Erro", "Não foi possível conectar ao servidor.");
-  }
-};
-
-
-
-  const closeLogin = () => {
-    onClose();
   };
 
   return (
@@ -65,20 +72,19 @@ export default function LoginModal({ visible, onClose, onLogin, goToCadastro }: 
         <View style={styles.popup}>
           <Text style={styles.title}>Login</Text>
 
-          {/* --- CAMPO EMAIL --- */}
           <Text style={styles.label}>Email *</Text>
           <View style={styles.inputBox}>
             <TextInput
-              placeholder="maria.silva@gmail.com"
+              placeholder="email@gmail.com"
               style={styles.input}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
+              keyboardType="email-address"
             />
             <Ionicons name="mail-outline" size={20} color="#555" />
           </View>
 
-          {/* --- CAMPO SENHA --- */}
           <Text style={styles.label}>Senha *</Text>
           <View style={styles.inputBox}>
             <TextInput
@@ -97,15 +103,16 @@ export default function LoginModal({ visible, onClose, onLogin, goToCadastro }: 
             </TouchableOpacity>
           </View>
 
-          {/* --- BOTÃO ENTRAR --- */}
           <TouchableOpacity
             style={styles.button}
-            onPress={handleLogin} // Agora com o método async
+            onPress={handleLogin}
+            disabled={loading}
           >
-            <Text style={styles.buttonText}>Entrar</Text>
+            <Text style={styles.buttonText}>
+              {loading ? "Entrando..." : "Entrar"}
+            </Text>
           </TouchableOpacity>
 
-          {/* --- LINK CADASTRE-SE --- */}
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>Não tem uma conta?</Text>
             <TouchableOpacity onPress={goToCadastro}>
@@ -113,8 +120,7 @@ export default function LoginModal({ visible, onClose, onLogin, goToCadastro }: 
             </TouchableOpacity>
           </View>
 
-          {/* --- BOTÃO FECHAR --- */}
-          <TouchableOpacity style={styles.closeBtn} onPress={closeLogin}>
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
             <Ionicons name="close" size={26} color="#333" />
           </TouchableOpacity>
         </View>
@@ -124,52 +130,57 @@ export default function LoginModal({ visible, onClose, onLogin, goToCadastro }: 
 }
 
 const styles = StyleSheet.create({
-  overlay: { 
-    flex: 1, 
-    backgroundColor: "rgba(0,0,0,0.5)", 
-    justifyContent: "center", 
-    alignItems: "center" 
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  popup: { 
-    width: "85%", 
-    backgroundColor: "#fff", 
-    borderRadius: 20, 
+  popup: {
+    width: "85%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
     padding: 20,
-    elevation: 10, 
   },
-  title: { fontSize: 22, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+  },
   label: { fontSize: 14, marginTop: 10 },
   inputBox: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 12,
     paddingHorizontal: 10,
     marginTop: 5,
-    backgroundColor: "#f2f2f2"
+    backgroundColor: "#f2f2f2",
   },
   input: { flex: 1, paddingVertical: 8 },
   button: {
     backgroundColor: "#05182bff",
     paddingVertical: 12,
     borderRadius: 12,
-    marginTop: 20
+    marginTop: 20,
   },
-  buttonText: { textAlign: "center", color: "#fff", fontWeight: "bold" },
+  buttonText: {
+    textAlign: "center",
+    color: "#fff",
+    fontWeight: "bold",
+  },
   closeBtn: { position: "absolute", top: 10, right: 10 },
   registerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 15, 
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 15,
   },
-  registerText: {
-    fontSize: 14,
-    color: '#666',
-  },
+  registerText: { fontSize: 14, color: "#666" },
   registerLink: {
     fontSize: 14,
-    color: '#05182bff', 
-    fontWeight: 'bold',
-  }
+    color: "#05182bff",
+    fontWeight: "bold",
+  },
 });

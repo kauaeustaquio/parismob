@@ -94,7 +94,7 @@ export default function HomeScreen() {
 
 
     async function fetchCategories(query: string = "") {
-        const categoriesUrl = `https://x19x6q9t-3000.brs.devtunnels.ms/api/categorias`;
+        const categoriesUrl = `https://qt8rqmzq-3000.brs.devtunnels.ms/api/categorias`;
         try {
             const response = await fetch(categoriesUrl);
             if (!response.ok) throw new Error("Erro ao buscar categorias");
@@ -109,7 +109,7 @@ export default function HomeScreen() {
 
     async function fetchProducts(categoryId: string | null = null, query: string = "") {
     try {
-        let url = `https://x19x6q9t-3000.brs.devtunnels.ms/api/produtos`;
+        let url = `https://qt8rqmzq-3000.brs.devtunnels.ms/api/produtos`;
         if (categoryId && categoryId !== 'produtos') {
             url += `?categoria_id=${categoryId}`;
         }
@@ -159,7 +159,7 @@ export default function HomeScreen() {
 
     // --------------------- FAVORITOS E CARRINHO ---------------------
     // --------------------- FAVORITOS ---------------------
-const API_FAVORITOS = "https://x19x6q9t-3000.brs.devtunnels.ms/api/favoritos";
+const API_FAVORITOS = "https://qt8rqmzq-3000.brs.devtunnels.ms/api/favoritos";
 
 
 const toggleFavorite = async (produto: Product) => {
@@ -242,7 +242,7 @@ const toggleFavorite = async (produto: Product) => {
     async function handleLogin(email: string, senha: string) {
     try {
         const response = await fetch(
-            "https://x19x6q9t-3000.brs.devtunnels.ms/api/clientes",
+            "https://qt8rqmzq-3000.brs.devtunnels.ms/api/clientes",
             {
                 method: "POST",
                 headers: {
@@ -375,7 +375,7 @@ const toggleFavorite = async (produto: Product) => {
                 {/* --------------------- PRODUTOS --------------------- */}
                 <View style={styles.productsContainer}>
                     {displayedProducts.length > 0 ? displayedProducts.map((produto, index) => (
-                       <View key={String(produto.id)} style={styles.productCard}>
+                    <View key={String(produto.id)} style={styles.productCard}>
 
                             <Image
                                 source={{ uri: produto.imagem || "https://via.placeholder.com/80" }}
@@ -482,7 +482,7 @@ const toggleFavorite = async (produto: Product) => {
                                 }}
                                 disabled={cartItems.length === 1}
                                 >
-                           
+                        
                                 <Text style={{ color: "#fff", fontWeight: "bold" }}>Finalizar Compra</Text>
                             </TouchableOpacity>
 
