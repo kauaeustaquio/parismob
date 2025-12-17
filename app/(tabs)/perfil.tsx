@@ -74,7 +74,7 @@ export default function Perfil({ user, isLogged }: PerfilProps) {
     const fetchLoja = async () => {
       try {
         const response = await fetch(
-          "https://qt8rqmzq-3000.brs.devtunnels.ms/api/loja"
+          "https://lrqzgzqc-3000.brs.devtunnels.ms/api/loja"
         );
         const data = await response.json();
         setLoja(data);

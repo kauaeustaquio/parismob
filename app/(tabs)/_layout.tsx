@@ -81,6 +81,13 @@ export default function TabLayout() {
           href: null,
         }}
       />
+
+      <Tabs.Screen
+        name="pagamento"
+        options={{
+          href: null,
+        }}
+    />
       
       {/* Oculta a rota de erro, se existir */}
       <Tabs.Screen

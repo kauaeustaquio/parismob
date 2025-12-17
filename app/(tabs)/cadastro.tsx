@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const API_URL = "https://qt8rqmzq-3000.brs.devtunnels.ms/";
+const API_URL = "https://lrqzgzqc-3000.brs.devtunnels.ms/";
 
 export default function Cadastro() {
     const [nome, setNome] = useState("");

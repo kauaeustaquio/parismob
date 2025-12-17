@@ -8,13 +8,14 @@ import {
   View,
   Modal,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface LoginModalProps {
   visible: boolean;
   onClose: () => void;
-  onLogin: (email: string, senha: string) => void;
+  onLogin: () => void; // 🔥 avisa que o login deu certo
   goToCadastro: () => void;
 }
 
@@ -29,8 +30,10 @@ export default function LoginModal({
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ⚠️ AJUSTE A URL CONFORME SEU AMBIENTE
-  const API_BASE = "https://qt8rqmzq-3000.brs.devtunnels.ms/";
+  // ⚠️ ajuste se mudar de ambiente
+  const API_BASE = "https://lrqzgzqc-3000.brs.devtunnels.ms";
+
+  
 
   const handleLogin = async () => {
     if (!email || !senha) {
@@ -41,25 +44,37 @@ export default function LoginModal({
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}api/clientes/login`, {
+      const response = await fetch(`${API_BASE}/api/clientes/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ email, senha }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        Alert.alert("Erro", data.msg || "Falha no login");
+        Alert.alert("Erro", data.msg || "E-mail ou senha inválidos");
         return;
       }
 
+      // 💾 salva usuário logado
       await AsyncStorage.setItem("user", JSON.stringify(data));
 
-      Alert.alert("Sucesso", "Login realizado!");
+      Alert.alert("Sucesso", "Login realizado com sucesso!");
+
+      // 🔥 ESSENCIAL
+      onLogin();
+
+      // fecha modal
       onClose();
+
+      // limpa campos
+      setEmail("");
+      setSenha("");
     } catch (error) {
-      console.log("Erro de conexão:", error);
+      console.error("Erro no login:", error);
       Alert.alert("Erro", "Não foi possível conectar ao servidor");
     } finally {
       setLoading(false);
@@ -72,6 +87,7 @@ export default function LoginModal({
         <View style={styles.popup}>
           <Text style={styles.title}>Login</Text>
 
+          {/* EMAIL */}
           <Text style={styles.label}>Email *</Text>
           <View style={styles.inputBox}>
             <TextInput
@@ -85,6 +101,7 @@ export default function LoginModal({
             <Ionicons name="mail-outline" size={20} color="#555" />
           </View>
 
+          {/* SENHA */}
           <Text style={styles.label}>Senha *</Text>
           <View style={styles.inputBox}>
             <TextInput
@@ -103,16 +120,20 @@ export default function LoginModal({
             </TouchableOpacity>
           </View>
 
+          {/* BOTÃO LOGIN */}
           <TouchableOpacity
             style={styles.button}
             onPress={handleLogin}
             disabled={loading}
           >
-            <Text style={styles.buttonText}>
-              {loading ? "Entrando..." : "Entrar"}
-            </Text>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Entrar</Text>
+            )}
           </TouchableOpacity>
 
+          {/* CADASTRO */}
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>Não tem uma conta?</Text>
             <TouchableOpacity onPress={goToCadastro}>
@@ -120,6 +141,7 @@ export default function LoginModal({
             </TouchableOpacity>
           </View>
 
+          {/* FECHAR */}
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
             <Ionicons name="close" size={26} color="#333" />
           </TouchableOpacity>
@@ -148,7 +170,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
-  label: { fontSize: 14, marginTop: 10 },
+  label: {
+    fontSize: 14,
+    marginTop: 10,
+  },
   inputBox: {
     flexDirection: "row",
     alignItems: "center",
@@ -159,25 +184,36 @@ const styles = StyleSheet.create({
     marginTop: 5,
     backgroundColor: "#f2f2f2",
   },
-  input: { flex: 1, paddingVertical: 8 },
+  input: {
+    flex: 1,
+    paddingVertical: 8,
+  },
   button: {
     backgroundColor: "#05182bff",
     paddingVertical: 12,
     borderRadius: 12,
     marginTop: 20,
+    alignItems: "center",
   },
   buttonText: {
-    textAlign: "center",
     color: "#fff",
     fontWeight: "bold",
+    fontSize: 16,
   },
-  closeBtn: { position: "absolute", top: 10, right: 10 },
+  closeBtn: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
   registerContainer: {
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 15,
   },
-  registerText: { fontSize: 14, color: "#666" },
+  registerText: {
+    fontSize: 14,
+    color: "#666",
+  },
   registerLink: {
     fontSize: 14,
     color: "#05182bff",

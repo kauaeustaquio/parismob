@@ -94,7 +94,7 @@ export default function HomeScreen() {
 
 
     async function fetchCategories(query: string = "") {
-        const categoriesUrl = `https://qt8rqmzq-3000.brs.devtunnels.ms/api/categorias`;
+        const categoriesUrl = `https://lrqzgzqc-3000.brs.devtunnels.ms/api/categorias`;
         try {
             const response = await fetch(categoriesUrl);
             if (!response.ok) throw new Error("Erro ao buscar categorias");
@@ -109,7 +109,7 @@ export default function HomeScreen() {
 
     async function fetchProducts(categoryId: string | null = null, query: string = "") {
     try {
-        let url = `https://qt8rqmzq-3000.brs.devtunnels.ms/api/produtos`;
+        let url = `https://lrqzgzqc-3000.brs.devtunnels.ms/api/produtos`;
         if (categoryId && categoryId !== 'produtos') {
             url += `?categoria_id=${categoryId}`;
         }
@@ -159,7 +159,7 @@ export default function HomeScreen() {
 
     // --------------------- FAVORITOS E CARRINHO ---------------------
     // --------------------- FAVORITOS ---------------------
-const API_FAVORITOS = "https://qt8rqmzq-3000.brs.devtunnels.ms/api/favoritos";
+const API_FAVORITOS = "https://lrqzgzqc-3000.brs.devtunnels.ms/api/favoritos";
 
 
 const toggleFavorite = async (produto: Product) => {
@@ -242,7 +242,7 @@ const toggleFavorite = async (produto: Product) => {
     async function handleLogin(email: string, senha: string) {
     try {
         const response = await fetch(
-            "https://qt8rqmzq-3000.brs.devtunnels.ms/api/clientes",
+            "https://lrqzgzqc-3000.brs.devtunnels.ms/api/clientes",
             {
                 method: "POST",
                 headers: {
@@ -282,22 +282,17 @@ const toggleFavorite = async (produto: Product) => {
 
             {/* --------------------- LOGIN MODAL --------------------- */}
             <LoginModal
-                visible={loginVisible}
-                onClose={() => setLoginVisible(false)}
-                onLogin={(email, senha) => {
-                    console.log("LOGANDO...", email, senha);
-                    setIsLogged(true);
-                    setLoginVisible(false);
+  visible={loginVisible}
+  onClose={() => setLoginVisible(false)}
+  onLogin={() => {
+    setIsLogged(true);
+    setLoginVisible(false);
 
-
-                    // Se o usuário tentou finalizar a compra antes de logar, redireciona para o checkout
-                    if (pendingCheckout) {
-                    setPendingCheckout(false);
-                    router.push("/checkout");
-                    }
-                }}
-                goToCadastro={goToCadastro}
-            />
+    // 🔥 SEMPRE vai para o checkout após login
+    router.push("/checkout");
+  }}
+  goToCadastro={goToCadastro}
+/>
 
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
